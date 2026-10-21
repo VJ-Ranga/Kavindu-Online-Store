@@ -1,13 +1,11 @@
 /* Version switcher strip shown at the very top of every demo page (review only, not part of the store) */
 (function () {
-  var path = location.pathname, cur = (path.match(/\/(v[1-4])\//) || [])[1] || '';
+  var path = location.pathname, cur = (path.match(/\/(v[23])\//) || [])[1] || '';
   var skin = /[?&]opt=[^&]*skin-2/.test(location.search) || (function () { try { return (JSON.parse(localStorage.getItem('kv-options')) || {}).skin === '2'; } catch (e) { return false; } })();
   var items = [
-    ['v1', 'Version 1', 'v1/index.html'],
     ['v2', 'Version 2', 'v2/index.html'],
     ['v3c', 'Version 3 Classic', 'v3/index.html?opt=skin-1'],
-    ['v3m', 'Version 3 Modern', 'v3/index.html?opt=skin-2'],
-    ['v4', 'Version 4', 'v4/index.html']
+    ['v3m', 'Version 3 Modern', 'v3/index.html?opt=skin-2']
   ];
   var active = cur === 'v3' ? (skin ? 'v3m' : 'v3c') : cur;
   var root = path.slice(0, path.search(/\/v[1-4]\//) + 1) || '/';
