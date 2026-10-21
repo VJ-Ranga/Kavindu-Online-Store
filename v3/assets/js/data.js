@@ -77,8 +77,8 @@
       { img: 'https://images.unsplash.com/photo-1615066390971-03e4e1c36ddf?auto=format&fit=crop&w=1320&h=520&q=75', imgWide: 'https://images.unsplash.com/photo-1615066390971-03e4e1c36ddf?auto=format&fit=crop&w=1920&h=600&q=75', imgMobile: 'https://images.unsplash.com/photo-1615066390971-03e4e1c36ddf?auto=format&fit=crop&w=800&h=800&q=75', link: 'easy-payment.html', alt: 'Dining room furniture' }
     ],
     side: [
-      { img: 'assets/img/banners/side-1.webp', link: 'shop.html?cat=air-conditioners', alt: 'Inverter air conditioners from Rs 219,900' },
-      { img: 'assets/img/banners/side-2.webp', link: 'shop.html?cat=washing-machines', alt: 'Washing machines from Rs 85,250' }
+      { img: 'https://images.unsplash.com/photo-1665826254141-bfa10685e002?auto=format&fit=crop&w=900&h=600&q=75', link: 'shop.html?cat=air-conditioners', alt: 'Air conditioners' },
+      { img: 'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?auto=format&fit=crop&w=900&h=600&q=75', link: 'shop.html?cat=washing-machines', alt: 'Washing machines' }
     ],
     promos: [
       { img: 'assets/img/banners/promo-1.webp', link: 'shop.html?cat=kitchen-appliances', alt: 'Kitchen appliances from Rs 14,900' },

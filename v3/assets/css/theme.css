@@ -649,3 +649,29 @@ li.product .kv-card .add_to_cart_button, li.product .kv-card .button { height: 4
 /* Section after the hero/service tiles: same breathing room as every other section */
 #home-hero + .kv-section, #home-hero + section { margin-top: var(--section-space) !important; }
 
+
+/* ===== HERO HEIGHT — authoritative (all hero layouts, both styles) =====
+   Desktop hero row is 560px tall like Version 2; images are plain photos so they fill with object-fit: cover. */
+:root { --hero-h: 560px; }
+@media (min-width: 992px) {
+  .hero .kv-slider, .hero .kv-slider.hero-slider, .hero-fullbleed .kv-slider, .hero3-grid .kv-slider, .hero1-grid .kv-slider { aspect-ratio: auto !important; height: var(--hero-h) !important; max-height: none !important; }
+  .hero1-grid { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) !important; gap: 16px !important; align-items: stretch !important; }
+  .hero-side { display: grid !important; grid-template-rows: 1fr 1fr !important; grid-template-columns: 1fr !important; gap: 16px !important; height: var(--hero-h) !important; }
+  .hero-side > * { aspect-ratio: auto !important; height: auto !important; min-height: 0; }
+  .hero3-grid .hero-catlist { height: var(--hero-h) !important; min-height: 0 !important; }
+}
+.hero .kv-slide img, .hero-side img { width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: center !important; }
+.hero .kv-slide, .hero .kv-slide a, .hero .kv-slide picture, .hero-side a, .hero-side picture { display: block; height: 100%; }
+@media (max-width: 991.98px) {
+  .hero .kv-slider, .hero .kv-slider.hero-slider, .hero-fullbleed .kv-slider { aspect-ratio: auto !important; height: 380px !important; }
+  .hero-side { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 12px !important; margin-top: 12px; }
+  .hero-side > * { aspect-ratio: auto !important; height: 180px !important; }
+}
+@media (max-width: 575.98px) {
+  .hero .kv-slider, .hero .kv-slider.hero-slider, .hero-fullbleed .kv-slider { height: 300px !important; }
+  .hero-side > * { height: 140px !important; }
+}
+/* specificity match for older full-bleed rules */
+@media (min-width: 992px) { .hero .hero-fullbleed .kv-slider.hero-slider, .hero .hero1-grid .kv-slider.hero-slider, .hero .hero3-grid .kv-slider.hero-slider { aspect-ratio: auto !important; height: var(--hero-h) !important; } }
+@media (max-width: 991.98px) { .hero .hero-fullbleed .kv-slider.hero-slider, .hero .hero1-grid .kv-slider.hero-slider, .hero .hero3-grid .kv-slider.hero-slider { aspect-ratio: auto !important; height: 380px !important; } }
+@media (max-width: 575.98px) { .hero .hero-fullbleed .kv-slider.hero-slider, .hero .hero1-grid .kv-slider.hero-slider, .hero .hero3-grid .kv-slider.hero-slider { height: 300px !important; } }
