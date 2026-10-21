@@ -7,6 +7,7 @@
     var S = { pid: '', price: 120000, down: E.defaultDownPct, months: E.defaultTenure };
     var elig = KV.products.filter(function (p) { return p.price >= E.minPrice; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
     var q = qs.get('product') || qs.get('id');
+    if (!q && Number.isFinite(+qs.get('price')) && +qs.get('price') >= E.minPrice) S.price = Math.round(+qs.get('price'));
     if (q && KV.product(q)) { S.pid = q; S.price = KV.product(q).price; }
     if (qs.get('months') && E.tenures.some(function (t) { return t.months === +qs.get('months'); })) S.months = +qs.get('months');
     if (qs.get('down') && +qs.get('down') >= E.minDownPct) S.down = Math.min(60, Math.round(+qs.get('down') / 5) * 5);
@@ -35,6 +36,7 @@
       $('#r-months').textContent = ok ? 'for ' + S.months + ' months' : '';
       $('#r-cash').textContent = fmt(S.price); $('#r-down').textContent = fmt(r.down); $('#r-fin').textContent = fmt(r.financed);
       $('#r-extra').textContent = fmt(r.extra) + ' (' + r.markupPct + '%)'; $('#r-total').textContent = fmt(r.total);
+      var note = d.getElementById('ep-rounding'); if (!note) { note = d.createElement('div'); note.id = 'ep-rounding'; $('#r-total').parentNode.parentNode.appendChild(note); } note.innerHTML = KV.planNote(r);
       $('#c-table tbody').innerHTML = E.tenures.map(function (t) {
         var x = KV.calc(S.price, S.down, t.months);
         return '<tr class="' + (t.months === S.months ? 'on' : '') + '"><th scope="row">' + t.months + ' months</th><td>' + fmt(x.monthly) + '</td><td>' + fmt(x.down) + '</td><td>' + fmt(x.extra) + '</td><td>' + fmt(x.total) + '</td><td><button type="button" class="kv-chip" data-pick="' + t.months + '" aria-label="Choose ' + t.months + ' month plan">Choose</button></td></tr>';
@@ -144,7 +146,7 @@
       var r = KV.calc(S.price, S.down, S.months), p = S.pid ? KV.product(S.pid) : null;
       function sec(t, rows) { return '<h4>' + t + '</h4><dl>' + rows.filter(function (x) { return x[1]; }).map(function (x) { return '<div><dt>' + x[0] + '</dt><dd>' + esc(x[1]) + '</dd></div>'; }).join('') + '</dl>'; }
       $('#a-review').innerHTML =
-        sec('Plan', [['Product', p ? p.name : 'Custom price'], ['Cash price', fmt(S.price)], ['Down payment', fmt(r.down) + ' (' + S.down + '%)'], ['Monthly', fmt(r.monthly) + ' x ' + S.months], ['Total payable', fmt(r.total)]]) +
+        sec('Plan', [['Product', p ? p.name : 'Custom price'], ['Cash price', fmt(S.price)], ['Down payment', fmt(r.down) + ' (' + S.down + '%)'], ['Monthly', fmt(r.monthly) + ' x ' + S.months], ['Final instalment', fmt(r.finalMonthly)], ['Total payable', fmt(r.total)]]) +
         sec('Personal', [['Name', val('a-name')], ['NIC', val('a-nic')], ['Mobile', val('a-mobile')], ['Email', val('a-email')], ['Address', val('a-address') + ', ' + val('a-district')]]) +
         sec('Employment', [['Type', val('a-emptype')], ['Employer', val('a-employer')], ['Years in job', val('a-years')], ['Monthly income', fmt(+val('a-income'))]]) +
         sec('Guarantor', [['Name', val('g-name') || 'None added'], ['NIC', val('g-nic')], ['Mobile', val('g-mobile')], ['Relationship', val('g-rel')]]) +
@@ -169,7 +171,7 @@
       if (step < TOTAL) { show(step + 1, true); return; }
       var apps = KV.load('kv-applications', []), ref = 'EP-2026-' + String(Math.floor(1000 + Math.random() * 9000));
       var r = KV.calc(S.price, S.down, S.months), p = S.pid ? KV.product(S.pid) : null;
-      apps.unshift({ ref: ref, date: new Date().toISOString(), status: 'Under review', productId: S.pid, product: p ? p.name : 'Custom purchase', image: p ? p.images[0] : '', price: S.price, downPct: S.down, down: r.down, months: S.months, monthly: r.monthly, total: r.total, name: val('a-name'), nic: val('a-nic'), mobile: val('a-mobile'), district: val('a-district'), documents: files });
+      apps.unshift({ ref: ref, date: new Date().toISOString(), status: 'Under review', productId: S.pid, product: p ? p.name : 'Custom purchase', image: p ? p.images[0] : '', price: S.price, downPct: S.down, down: r.down, months: S.months, monthly: r.monthly, finalMonthly: r.finalMonthly, total: r.total, name: val('a-name'), nic: val('a-nic'), mobile: val('a-mobile'), district: val('a-district'), documents: files });
       KV.save('kv-applications', apps);
       form.hidden = true; $('#a-progress').hidden = true; $('#a-count').hidden = true;
       $('#a-ref').textContent = ref; $('#a-done-mob').textContent = val('a-mobile'); var dn = $('#a-done'); dn.hidden = false; dn.focus(); dn.scrollIntoView({ block: 'center', behavior: 'smooth' });

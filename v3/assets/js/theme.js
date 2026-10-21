@@ -65,7 +65,7 @@
   KV.products = PRODS; KV.categories = CATS; KV.easy = D.easyPayment || {};
 
   /* ---------- storage ---------- */
-  function load(k, def) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null ? def : v; } catch (e) { return def; } }
+  function load(k, def) { try { var v = JSON.parse(localStorage.getItem(k)); return v == null || (Array.isArray(def) && !Array.isArray(v)) || (def && !Array.isArray(def) && typeof def === 'object' && (typeof v !== 'object' || Array.isArray(v))) ? def : v; } catch (e) { return def; } }
   function save(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
   function emit(name, detail) { w.dispatchEvent(new CustomEvent('kv:' + name, { detail: detail })); }
   var $ = function (s, r) { return (r || d).querySelector(s); };
@@ -91,25 +91,38 @@
 
   /* ---------- Easy Payment calc ---------- */
   KV.calc = function (price, downPct, months) {
-    var e = KV.easy, t = null, i;
-    for (i = 0; i < e.tenures.length; i++) if (e.tenures[i].months === months) t = e.tenures[i];
-    if (!t) t = e.tenures[e.tenures.length - 1];
+    var e = KV.easy, ts = e.tenures || [], t = ts.filter(function (x) { return x.months === +months; })[0];
+    if (!t) t = ts.filter(function (x) { return x.months === e.defaultTenure; })[0] || ts[0];
+    price = Number.isFinite(+price) ? Math.max(0, Math.round(+price)) : 0;
+    downPct = Number.isFinite(+downPct) ? Math.min(100, Math.max(e.minDownPct || 0, +downPct)) : e.defaultDownPct;
+    months = t.months;
     var down = Math.round(price * downPct / 100), fin = price - down, extra = Math.round(fin * t.markupPct / 100);
-    return { down: down, financed: fin, extra: extra, total: price + extra, monthly: Math.ceil((fin + extra) / months), months: months, markupPct: t.markupPct };
+    var monthly = Math.ceil((fin + extra) / months), finalMonthly = fin + extra - monthly * (months - 1);
+    return { down: down, financed: fin, extra: extra, total: price + extra, monthly: monthly, finalMonthly: finalMonthly, months: months, markupPct: t.markupPct };
   };
+  KV.planNote = function (c) { return '<small class="plan-rounding">Illustrative plan; rates await client confirmation.' + (c.finalMonthly !== c.monthly ? ' Final instalment ' + KV.fmt(c.finalMonthly) + ' after ' + (c.months - 1) + ' payments of ' + KV.fmt(c.monthly) + '.' : '') + '</small>'; };
+
   KV.easyMonthly = function (p, months) {
     if (p.price < KV.easy.minPrice) return 0;
     return KV.calc(p.price, KV.easy.minDownPct, months || KV.easy.defaultTenure).monthly;
   };
 
   /* ---------- cart / wishlist / compare ---------- */
-  var cartData = load('kv-cart', []);
+  function cleanCart(items) {
+    var clean = [];
+    items.forEach(function (it) {
+      if (!it || !KV.product(it.id) || !Number.isFinite(+it.qty) || +it.qty < 1) return;
+      var old = clean.filter(function (x) { return x.id === it.id; })[0], qty = Math.min(99, Math.floor(+it.qty));
+      if (old) old.qty = Math.min(99, old.qty + qty); else clean.push({ id: it.id, qty: qty });
+    }); return clean;
+  }
+  var cartData = cleanCart(load('kv-cart', []));
   KV.cart = {
     items: function () { return cartData.map(function (i) { return { id: i.id, qty: i.qty, product: KV.product(i.id) }; }).filter(function (i) { return i.product; }); },
     add: function (id, qty, o) {
-      var p = KV.product(id); if (!p) return; qty = Math.max(1, parseInt(qty, 10) || 1);
+      var p = KV.product(id); if (!p || /out/i.test(p.stock)) return; qty = Math.min(99, Math.max(1, parseInt(qty, 10) || 1));
       var it = cartData.filter(function (i) { return i.id === id; })[0];
-      if (it) it.qty += qty; else cartData.push({ id: id, qty: qty });
+      if (it) it.qty = Math.min(99, it.qty + qty); else cartData.push({ id: id, qty: qty });
       save('kv-cart', cartData); emit('cart', { id: id, action: 'add' });
       if (!(o && o.silent)) {
         KV.notice('<a href="cart.html" class="button wc-forward">View cart</a> &ldquo;' + esc(p.name) + '&rdquo; has been added to your cart.');
@@ -124,7 +137,7 @@
     shippingFee: function () { var s = KV.cart.subtotal(); return s === 0 || s >= D.shipping.freeOver ? 0 : D.shipping.flat; }
   };
   function listStore(key, max) {
-    var arr = load(key, []);
+    var arr = load(key, []).filter(function (id, i, a) { return KV.product(id) && a.indexOf(id) === i; }).slice(0, max || PRODS.length);
     return {
       items: function () { return arr.slice(); },
       has: function (id) { return arr.indexOf(id) > -1; },
@@ -140,12 +153,16 @@
   KV.wishlist = listStore('kv-wishlist'); KV.compare = listStore('kv-compare', 3);
 
   /* ---------- options ---------- */
-  var OPT_DEF = { skin: '1', header: '1', hero: '1', cats: '1', card: '1', rail1: '1', rail2: '3', rail3: '2', footer: '1' };
+  var OPT_DEF = { skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', hero: '1', cats: '1', card: '1', rail1: '1', rail2: '3', rail3: '2', footer: '1' };
   var RAIL_KEYS = ['rail1', 'rail2', 'rail3'];
   function optOk(k, v) { return (k === 'skin' ? ['1', '2'] : ['1', '2', '3']).indexOf(String(v)) > -1; }
   var OPT_META = [
     { key: 'skin', title: 'Design style', home: false, items: ['Classic retail', 'Modern - bold, rounded, full-width bands'] },
     { key: 'header', title: 'Header', home: false, items: ['Retail classic - top bar, search, mega menu', 'Centered - boutique logo and mega panels', 'Compact sticky - one row with offer strip'] },
+    { key: 'menu', title: 'Desktop navigation', home: false, items: ['Standard category links', 'Category icons', 'Department mega menu'] },
+    { key: 'mheader', title: 'Mobile header', home: false, items: ['Retail - logo row and search field', 'Compact - logo row with search button', 'Search first - prominent search and quick links'] },
+    { key: 'bottom', title: 'Mobile bottom navigation', home: false, items: ['Standard four-tab bar', 'Floating pill with active tab', 'Compact icon tiles'] },
+    { key: 'mcard', title: 'Mobile product cards', home: false, items: ['Retail grid - price and payment details', 'Image first - visible shopping actions', 'Detailed horizontal list'] },
     { key: 'hero', title: 'Hero (home)', home: true, items: ['Slider + 2 banners', 'Full-width banner + service tiles', 'Category list + slider'] },
     { key: 'cats', title: 'Categories (home)', home: true, items: ['Image tiles', 'Icon row', 'Circle images'] },
     { key: 'card', title: 'Product card', home: false, items: ['Standard retail', 'Hover actions', 'Detailed list-style'] },
@@ -160,15 +177,24 @@
     /* Shareable preview links: ?opt=skin-2,header-2,rail1-3 ("rail-N" sets all three sections) */
     try { var q = new URLSearchParams(location.search).get('opt'); if (q) { q.split(',').forEach(function (pair) { var kv = pair.split('-'); if (kv[0] === 'rail' && optOk('rail1', kv[1])) RAIL_KEYS.forEach(function (r) { o[r] = kv[1]; }); else if (kv[0] in OPT_DEF && optOk(kv[0], kv[1])) o[kv[0]] = kv[1]; }); save('kv-options', o); } } catch (e) {}
     return o; })();
-  function applyOpts() { for (var k in optState) d.body.setAttribute('data-' + k, optState[k]); }
+  function mobileCard() { return w.matchMedia('(max-width: 991.98px)').matches ? optState.mcard : optState.card; }
+  function applyOpts() { for (var k in optState) d.body.setAttribute('data-' + k, optState[k]); d.body.setAttribute('data-card', mobileCard()); if (w.history && new URLSearchParams(w.location.search).has('opt')) { try { w.history.replaceState(null, '', KV.options.url()); } catch (e) {} } }
+  var PRESETS = [
+    { id: 'classic', title: 'Everyday retail', desc: 'Familiar shopping, offers up front', skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', hero: '1', cats: '1', card: '1', rail1: '1', rail2: '3', rail3: '2', footer: '1' },
+    { id: 'modern', title: 'Modern showcase', desc: 'Wide imagery and clean product rails', skin: '2', header: '2', menu: '3', mheader: '2', bottom: '2', mcard: '2', hero: '2', cats: '3', card: '2', rail1: '2', rail2: '1', rail3: '3', footer: '2' },
+    { id: 'catalogue', title: 'Catalogue first', desc: 'Quick category access and detailed cards', skin: '1', header: '3', menu: '2', mheader: '3', bottom: '3', mcard: '3', hero: '3', cats: '2', card: '3', rail1: '1', rail2: '2', rail3: '1', footer: '3' }
+  ];
   KV.options = {
+    presets: PRESETS,
+    url: function (base) { var u = new URL(base || w.location.href, w.location.href); u.searchParams.set('opt', Object.keys(OPT_DEF).map(function (k) { return k + '-' + optState[k]; }).join(',')); return u.href; },
+    preset: function (id) { var p = PRESETS.filter(function (x) { return x.id === id; })[0]; if (!p) return; Object.keys(OPT_DEF).forEach(function (k) { optState[k] = p[k]; }); save('kv-options', optState); applyOpts(); KV.renderHeader(); KV.renderFooter(); emit('options', { key: 'all' }); KV.sync(); syncOptUi(); },
     get: function () { return JSON.parse(JSON.stringify(optState)); },
     set: function (k, v) {
       v = String(v); if (k === 'rail' && optOk('rail1', v)) { RAIL_KEYS.forEach(function (r) { optState[r] = v; }); save('kv-options', optState); applyOpts(); emit('options', { key: 'rail', value: v }); KV.sync(); return; }
       if (!(k in OPT_DEF) || !optOk(k, v)) return;
       optState[k] = v; save('kv-options', optState); applyOpts();
-      if (k === 'header') KV.renderHeader(); if (k === 'footer') KV.renderFooter();
-      emit('options', { key: k, value: v }); KV.sync();
+      if (k === 'header' || k === 'menu' || k === 'mheader') KV.renderHeader(); if (k === 'footer' || k === 'skin') KV.renderFooter();
+      emit('options', { key: k === 'mcard' ? 'card' : k, value: v }); KV.sync(); syncOptUi();
     },
     reset: function () { optState = JSON.parse(JSON.stringify(OPT_DEF)); save('kv-options', optState); applyOpts(); KV.renderHeader(); KV.renderFooter(); emit('options', { key: 'all', value: null }); KV.sync(); }
   };
@@ -195,7 +221,7 @@
     if (out) return '<a href="' + KV.url(p) + '" class="button product_type_simple ' + (cls || '') + '" rel="nofollow">Read more</a>';
     return '<a href="?add-to-cart=' + esc(p.id) + '" data-quantity="1" class="button product_type_simple add_to_cart_button ajax_add_to_cart ' + (cls || '') + '" data-kv-add="' + esc(p.id) + '" data-product_id="' + esc(p.id) + '" data-product_sku="' + esc(p.sku) + '" aria-label="Add to cart: &ldquo;' + esc(p.name) + '&rdquo;" rel="nofollow">Add to cart</a>';
   }
-  function img(p, w2) { return '<img width="300" height="300" loading="lazy" src="' + esc(p.images[0]) + '" class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail" alt="' + esc(p.name) + '">'; }
+  function img(p, w2) { return '<img width="300" height="300" loading="lazy" decoding="async" src="' + esc(p.images[0]) + '" class="attachment-woocommerce_thumbnail size-woocommerce_thumbnail" alt="' + esc(p.name) + '">'; }
   function easyLine(p) { var m = KV.easyMonthly(p); return m ? '<span class="easy-line"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Easy Payment: <strong>' + KV.fmt(m) + '</strong> x ' + KV.easy.defaultTenure + ' months</span>' : ''; }
   function saveLine(p) { var s = KV.saving(p); return s.amount ? '<span class="save-line">Save ' + KV.fmt(s.amount) + '</span>' : ''; }
   function stockLine(p) { return '<span class="stock-line ' + stockClass(p.stock) + '"><i class="fa-solid ' + (stockClass(p.stock) === 'out' ? 'fa-circle-xmark' : stockClass(p.stock) === 'low-stock' ? 'fa-circle-exclamation' : 'fa-circle-check') + '" aria-hidden="true"></i> ' + esc(p.stock) + '</span>'; }
@@ -272,15 +298,20 @@
       '<a class="hdr-ico hdr-cart" href="cart.html" data-kv-open-cart><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="hdr-count" data-kv-cart-count>0</span>' + (opt && opt.total ? '<span class="hdr-cart-total" data-kv-cart-total>Rs 0</span>' : '') + '<span class="visually-hidden">Cart</span></a></div>';
   }
   function mobileHead(id) {
-    return '<div class="mhead d-lg-none"><div class="mhead-row"><button class="mh-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#kv-mobile-menu" aria-controls="kv-mobile-menu" aria-label="Open menu"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>' + logo(false, 32) +
-      '<div class="mh-right"><button class="mh-btn" type="button" data-kv-focus-search aria-label="Search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button><a class="mh-btn hdr-cart" href="cart.html" data-kv-open-cart aria-label="Cart"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="hdr-count" data-kv-cart-count>0</span></a></div></div>' +
-      '<div class="mhead-search">' + searchForm('m' + id, false) + '</div></div>';
+    var mode = optState.mheader, menu = '<button class="mh-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#kv-mobile-menu" aria-controls="kv-mobile-menu" aria-label="Open menu"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>';
+    var search = '<button class="mh-btn" type="button" data-kv-mobile-search aria-label="Search products"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>';
+    var cart = '<a class="mh-btn hdr-cart" href="cart.html" data-kv-open-cart aria-label="Cart"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="hdr-count" data-kv-cart-count>0</span></a>';
+    return '<div class="mhead mh-style-' + mode + ' d-lg-none"><div class="mhead-row">' + menu + logo(false, 32) + '<div class="mh-right">' + (mode === '3' ? '' : search) + cart + '</div></div>' + (mode === '2' ? '' : '<div class="mhead-search">' + searchForm('m' + id, false) + '</div>') + (mode === '3' ? '<div class="mh-shortcuts"><a href="shop.html?sort=deals"><i class="fa-solid fa-tags" aria-hidden="true"></i> Deals</a><a href="easy-payment.html"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Easy Payment</a><a href="stores.html"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Stores</a></div>' : '') + '</div>';
   }
   var NAV1 = ['furniture', 'refrigerators', 'washing-machines', 'tv-audio', 'air-conditioners', 'kitchen-appliances', 'laptops-phones'];
   var NAV3 = ['furniture', 'refrigerators', 'tv-audio', 'air-conditioners', 'laptops-phones'];
   function navLinks(ids, cls) {
-    return ids.map(function (id) { var c = KV.category(id); return '<li><a href="shop.html?cat=' + id + '"' + (location.search.indexOf('cat=' + id) > -1 ? ' aria-current="page"' : '') + '>' + esc(c.name) + '</a></li>'; }).join('') +
+    if (optState.menu === '3') return departmentMenu();
+    return ids.map(function (id) { var c = KV.category(id); return '<li><a href="shop.html?cat=' + id + '"' + (location.search.indexOf('cat=' + id) > -1 ? ' aria-current="page"' : '') + '>' + (optState.menu === '2' ? '<i class="' + c.icon + '" aria-hidden="true"></i> ' : '') + esc(c.name) + '</a></li>'; }).join('') +
       '<li><a href="easy-payment.html"' + (page === 'easy-payment.html' ? ' aria-current="page"' : '') + '>Easy Payment</a></li><li><a class="nav-deals" href="shop.html?sort=deals">Deals</a></li>';
+  }
+  function departmentMenu() {
+    return '<li class="department-item"><button type="button" class="department-toggle" data-kv-menu-toggle aria-controls="department-panel" aria-expanded="false"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Shop departments <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="department-panel" id="department-panel" hidden><div class="department-intro"><span>Find your next everyday upgrade</span><a href="shop.html">Shop all products <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div><div class="department-layout"><div class="department-grid">' + CATS.map(function (c) { return '<a class="department-card" href="shop.html?cat=' + c.id + '"><i class="' + c.icon + '" aria-hidden="true"></i><span><strong>' + esc(c.name) + '</strong><small>' + c.count + ' products</small></span><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>'; }).join('') + '</div><aside class="department-help"><span class="department-eyebrow">Made for your home</span><h3>Big plans.<br>Manageable payments.</h3><p>Explore furniture, appliances and technology, with a payment plan that suits you.</p><a href="easy-payment.html">Explore Easy Payment <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a><a href="stores.html">Visit a showroom</a></aside></div><div class="department-shortcuts"><a href="shop.html?sort=deals"><i class="fa-solid fa-tags" aria-hidden="true"></i> Current deals</a><a href="shop.html?sort=date"><i class="fa-solid fa-star" aria-hidden="true"></i> New arrivals</a><a href="contact.html"><i class="fa-regular fa-circle-question" aria-hidden="true"></i> Need a hand choosing?</a></div></div></li><li><a href="shop.html">Shop all</a></li><li><a href="easy-payment.html">Easy Payment</a></li><li><a class="nav-deals" href="shop.html?sort=deals">Deals</a></li>';
   }
   function catBrands(c) { var s = {}; PRODS.forEach(function (p) { if (p.category === c.id) s[p.brand] = 1; }); return Object.keys(s).slice(0, 5); }
   function header1() {
@@ -289,18 +320,18 @@
     }).join('');
     return '<header class="kv-header hdr-1"><div class="hdr-top d-none d-lg-block"><div class="container hdr-top-row"><ul><li><a href="tel:' + BR.hotlineTel + '"><i class="fa-solid fa-phone" aria-hidden="true"></i> Hotline ' + esc(BR.hotline) + '</a></li><li>Free delivery in Colombo over Rs 50,000</li></ul><ul><li><a href="stores.html"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Store locator</a></li><li><a href="my-account.html?tab=orders">Track order</a></li><li><a href="contact.html">Help</a></li></ul></div></div>' +
       '<div class="hdr-main d-none d-lg-block"><div class="container hdr-main-row">' + logo(false, 48) + searchForm('d1', true) + icons({ easy: true, total: true }) + '</div></div>' +
-      '<div class="hdr-nav d-none d-lg-block"><div class="container hdr-nav-row"><div class="allcats"><button type="button" class="allcats-btn" aria-haspopup="true"><i class="fa-solid fa-bars" aria-hidden="true"></i> All categories <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><ul class="allcats-menu">' + allc + '</ul></div><nav aria-label="Main"><ul class="nav-list">' + navLinks(NAV1) + '</ul></nav></div></div>' + mobileHead(1) + '</header>';
+      '<div class="hdr-nav d-none d-lg-block"><div class="container hdr-nav-row"><div class="allcats"' + (optState.menu === '3' ? ' hidden' : '') + '><button type="button" class="allcats-btn" data-kv-categories aria-expanded="false" aria-controls="allcats-menu"><i class="fa-solid fa-bars" aria-hidden="true"></i> All categories <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><ul class="allcats-menu" id="allcats-menu">' + allc + '</ul></div><nav aria-label="Main"><ul class="nav-list">' + navLinks(NAV1) + '</ul></nav></div></div>' + mobileHead(1) + '</header>';
   }
   function header2() {
-    var nav = NAV1.concat([]).slice(0, 6).map(function (id) {
+    var nav = NAV1.concat([]).map(function (id) {
       var c = KV.category(id), br = catBrands(c);
-      return '<li class="has-mega"><a href="shop.html?cat=' + id + '">' + esc(c.name) + ' <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></a><div class="mega"><div class="container mega-in"><div><h3>Shop by type</h3><ul>' + c.subs.map(function (s) { return '<li><a href="shop.html?cat=' + id + '">' + esc(s) + '</a></li>'; }).join('') + '</ul></div>' +
+      return '<li class="has-mega"><a href="shop.html?cat=' + id + '">' + esc(c.name) + '</a><button type="button" class="category-toggle" data-kv-menu-toggle aria-label="Browse ' + esc(c.name) + '" aria-expanded="false" aria-controls="mega-' + id + '"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="mega" id="mega-' + id + '" hidden><div class="container mega-in"><div><h3>Shop by type</h3><ul>' + c.subs.map(function (s) { return '<li><a href="shop.html?cat=' + id + '">' + esc(s) + '</a></li>'; }).join('') + '</ul></div>' +
         '<div><h3>Popular brands</h3><ul>' + br.map(function (b) { return '<li><a href="shop.html?cat=' + id + '&amp;brand=' + encodeURIComponent(b) + '">' + esc(b) + '</a></li>'; }).join('') + '</ul></div><div><h3>Quick links</h3><ul><li><a href="shop.html?cat=' + id + '&amp;sort=deals">Deals</a></li><li><a href="shop.html?cat=' + id + '&amp;sort=date">New arrivals</a></li><li><a href="easy-payment.html">Pay with Easy Payment</a></li><li><a href="stores.html">See it in a showroom</a></li></ul></div>' +
         '<a class="mega-promo" href="shop.html?cat=' + id + '"><img src="' + esc(c.image) + '" alt="" loading="lazy"><span>Shop ' + esc(c.name) + '</span></a></div></div></li>';
     }).join('');
     return '<header class="kv-header hdr-2"><div class="hdr-util d-none d-lg-block"><div class="container hdr-util-row"><span>Showrooms in Colombo, Kandy, Galle and 3 more cities</span><ul><li><a href="tel:' + BR.hotlineTel + '">' + esc(BR.hotline) + '</a></li><li><a href="stores.html">Store locator</a></li><li><a href="my-account.html?tab=orders">Track order</a></li></ul></div></div>' +
       '<div class="hdr-center d-none d-lg-block"><div class="container hdr-center-row"><div class="hc-left"><button type="button" class="hc-search-btn" data-kv-toggle-search aria-expanded="false" aria-controls="hdr2-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Search</button></div>' + logo(false, 56) + '<div class="hc-right">' + icons({ labels: true }) + '</div></div><div class="hdr2-search" id="hdr2-search" hidden><div class="container">' + searchForm('d2', true) + '</div></div></div>' +
-      '<nav class="hdr-nav2 d-none d-lg-block" aria-label="Main"><ul class="container">' + nav + '<li><a href="easy-payment.html">Easy Payment</a></li><li><a class="nav-deals" href="shop.html?sort=deals">Deals</a></li></ul></nav>' + mobileHead(2) + '</header>';
+      '<nav class="hdr-nav2 d-none d-lg-block" aria-label="Main"><ul class="container">' + (optState.menu === '1' ? nav + '<li><a href="easy-payment.html">Easy Payment</a></li><li><a class="nav-deals" href="shop.html?sort=deals">Deals</a></li>' : navLinks(NAV1)) + '</ul></nav>' + mobileHead(2) + '</header>';
   }
   function header3() {
     var off = load('kv-announce-off', 0);
@@ -321,8 +352,8 @@
       company: '<li><a href="about.html">About us</a></li><li><a href="stores.html">Showrooms</a></li><li><a href="policies.html#privacy">Privacy policy</a></li><li><a href="policies.html#terms">Terms &amp; conditions</a></li><li><a href="policies.html#easy-payment">Easy Payment terms</a></li>'
     };
   }
-  function news(id) { return '<form class="kv-news" data-kv-news><label for="nl-' + id + '">Email for offers and new arrivals</label><div><input id="nl-' + id + '" type="email" required placeholder="Your email address" autocomplete="email"><button type="submit" class="button">Subscribe</button></div><p class="news-msg" role="status" hidden>Thank you. You are subscribed.</p></form>'; }
-  function social() { return '<ul class="social"><li><a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a></li><li><a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a></li><li><a href="#" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a></li><li><a href="https://wa.me/' + BR.whatsapp + '" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a></li></ul>'; }
+  function news(id) { return '<form class="kv-news" data-kv-news><label for="nl-' + id + '">Email for offers and new arrivals</label><div><input id="nl-' + id + '" type="email" required placeholder="Your email address" autocomplete="email"><button type="submit" class="button">Subscribe</button></div><p class="news-msg" role="status" hidden>Preview saved. Email subscriptions will be connected for the live store.</p></form>'; }
+  function social() { return '<ul class="social"><li><a href="contact.html#social" data-kv-social="Facebook" aria-label="Facebook"><i class="fa-brands fa-facebook-f"></i></a></li><li><a href="contact.html#social" data-kv-social="Instagram" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a></li><li><a href="contact.html#social" data-kv-social="YouTube" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a></li><li><a href="https://wa.me/' + BR.whatsapp + '" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a></li></ul>'; }
   function footer1() {
     var c = footerCols();
     return '<footer class="kv-footer ft-1"><div class="container ft-grid"><div class="ft-about">' + logo(true, 44) + '<p>' + esc(BR.company) + '. Home and office furniture, appliances and electronics, with Easy Payment monthly instalments.</p><address><i class="fa-solid fa-location-dot" aria-hidden="true"></i> ' + esc(BR.address) + '<br><i class="fa-solid fa-phone" aria-hidden="true"></i> <a href="tel:' + BR.hotlineTel + '">' + esc(BR.hotline) + '</a><br><i class="fa-brands fa-whatsapp" aria-hidden="true"></i> WhatsApp ' + esc(BR.whatsappDisplay) + '<br><i class="fa-regular fa-envelope" aria-hidden="true"></i> <a href="mailto:' + BR.email + '">' + esc(BR.email) + '</a><br><i class="fa-regular fa-clock" aria-hidden="true"></i> ' + esc(BR.hours) + '</address></div>' +
@@ -332,12 +363,12 @@
   function footer2() {
     var c = footerCols();
     return '<footer class="kv-footer ft-2"><div class="ft-usp"><div class="container ft-usp-row"><div><i class="fa-solid fa-truck-fast" aria-hidden="true"></i><p><strong>Island-wide delivery</strong>Free in Colombo over Rs 50,000</p></div><div><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><p><strong>Manufacturer warranty</strong>Genuine local warranty</p></div><div><i class="fa-solid fa-calendar-check" aria-hidden="true"></i><p><strong>Easy Payment</strong>Monthly instalments up to 36 months</p></div><div><i class="fa-solid fa-store" aria-hidden="true"></i><p><strong>6 showrooms</strong>See and test before you buy</p></div></div></div>' +
-      '<div class="container ft-grid5"><div class="ft-about">' + logo(false, 44) + '<p>' + esc(BR.address) + '<br>Hotline <a href="tel:' + BR.hotlineTel + '">' + esc(BR.hotline) + '</a><br><a href="mailto:' + BR.email + '">' + esc(BR.email) + '</a></p>' + social() + '</div>' +
+      '<div class="container ft-grid5"><div class="ft-about">' + logo(optState.skin === '2', 44) + '<p>' + esc(BR.address) + '<br>Hotline <a href="tel:' + BR.hotlineTel + '">' + esc(BR.hotline) + '</a><br><a href="mailto:' + BR.email + '">' + esc(BR.email) + '</a></p>' + social() + '</div>' +
       '<nav aria-label="Shop"><h2>Shop</h2><ul>' + c.shop + '</ul></nav><nav aria-label="Customer service"><h2>Customer service</h2><ul>' + c.help + '</ul></nav><nav aria-label="Company"><h2>Company</h2><ul>' + c.company + '</ul></nav><div><h2>Newsletter</h2>' + news('f2') + '</div></div>' +
       '<div class="ft-bottom"><div class="container ft-bottom-row"><p>&copy; 2026 ' + esc(BR.company) + '</p>' + KV.payments() + '</div></div></footer>';
   }
   function footer3() {
-    return '<footer class="kv-footer ft-3"><div class="container">' + logo(false, 48) + '<ul class="ft3-links"><li><a href="shop.html">Shop</a></li><li><a href="easy-payment.html">Easy Payment</a></li><li><a href="stores.html">Showrooms</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li><li><a href="policies.html#delivery">Delivery</a></li><li><a href="policies.html#returns">Returns</a></li><li><a href="policies.html#privacy">Privacy</a></li><li><a href="policies.html#terms">Terms</a></li></ul>' + social() + KV.payments() + '<p class="ft3-copy">&copy; 2026 ' + esc(BR.company) + ' &middot; ' + esc(BR.address) + ' &middot; <a href="tel:' + BR.hotlineTel + '">' + esc(BR.hotline) + '</a></p></div></footer>';
+    return '<footer class="kv-footer ft-3"><div class="container">' + logo(optState.skin === '2', 48) + '<ul class="ft3-links"><li><a href="shop.html">Shop</a></li><li><a href="easy-payment.html">Easy Payment</a></li><li><a href="stores.html">Showrooms</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li><li><a href="policies.html#delivery">Delivery</a></li><li><a href="policies.html#returns">Returns</a></li><li><a href="policies.html#privacy">Privacy</a></li><li><a href="policies.html#terms">Terms</a></li></ul>' + social() + KV.payments() + '<p class="ft3-copy">&copy; 2026 ' + esc(BR.company) + ' &middot; ' + esc(BR.address) + ' &middot; <a href="tel:' + BR.hotlineTel + '">' + esc(BR.hotline) + '</a></p></div></footer>';
   }
   KV.renderFooter = function () {
     var host = $('#site-footer'); if (!host) return;
@@ -375,26 +406,32 @@
     var acc = CATS.map(function (c, i) {
       return '<div class="mm-item"><button class="mm-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mm-' + i + '" aria-expanded="false" aria-controls="mm-' + i + '"><span><i class="' + c.icon + '" aria-hidden="true"></i> ' + esc(c.name) + '</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div id="mm-' + i + '" class="collapse"><ul><li><a href="shop.html?cat=' + c.id + '">All ' + esc(c.name) + '</a></li>' + c.subs.map(function (s) { return '<li><a href="shop.html?cat=' + c.id + '">' + esc(s) + '</a></li>'; }).join('') + '</ul></div></div>';
     }).join('');
+    var presets = '<section class="opt-presets" aria-labelledby="opt-presets-title"><h3 id="opt-presets-title">Start with a complete look</h3><p>Try a combination, then fine-tune any option below.</p><div class="opt-preset-grid">' + PRESETS.map(function (p) { return '<button type="button" class="opt-preset" data-kv-preset="' + p.id + '" aria-pressed="false"><span class="preset-sketch preset-' + p.id + '" aria-hidden="true"><b></b><i></i><em></em></span><strong>' + p.title + '</strong><small>' + p.desc + '</small></button>'; }).join('') + '</div></section>';
     var lastGrp = '';
     var opts = OPT_META.map(function (g) {
       var gh = g.group && g.group !== lastGrp ? '<h3 class="opt-gh" data-opt-home="' + g.home + '">' + g.group + '</h3>' : ''; lastGrp = g.group || '';
-      return gh + '<fieldset class="opt-group" data-opt-home="' + g.home + '"><legend>' + g.title + '</legend>' + g.items.map(function (t, i) { return '<label class="opt-radio"><input type="radio" name="opt-' + g.key + '" value="' + (i + 1) + '" data-kv-opt="' + g.key + '"><span><strong>' + (i + 1) + '</strong> ' + t + '</span></label>'; }).join('') + '</fieldset>';
+      return gh + '<fieldset class="opt-group" data-opt-home="' + g.home + '"><legend>' + g.title + '</legend>' + g.items.map(function (t, i) { return '<label class="opt-radio"><input type="radio" name="opt-' + g.key + '" value="' + (i + 1) + '" data-kv-opt="' + g.key + '"><span><i class="opt-mini opt-mini-' + g.key + ' opt-mini-' + (i + 1) + '" aria-hidden="true"><b></b><b></b><b></b></i><strong>' + (i + 1) + '</strong> ' + t + '</span></label>'; }).join('') + '</fieldset>';
     }).join('');
     wrap.innerHTML = '<a class="kv-skip" href="#primary">Skip to content</a>' +
       '<div class="kv-notices" aria-live="polite"></div>' +
       '<div class="offcanvas offcanvas-end kv-drawer" id="kv-cart-drawer" tabindex="-1" aria-labelledby="kv-cart-title"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-cart-title">Your cart <span id="kv-cart-count"></span></h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close cart"></button></div><div class="offcanvas-body" id="kv-cart-body"></div></div>' +
       '<div class="offcanvas offcanvas-start kv-drawer" id="kv-mobile-menu" tabindex="-1" aria-labelledby="kv-mm-title"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-mm-title">Menu</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close menu"></button></div><div class="offcanvas-body p-0"><div class="mm-links"><a href="easy-payment.html"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Easy Payment</a><a class="nav-deals" href="shop.html?sort=deals"><i class="fa-solid fa-tags" aria-hidden="true"></i> Deals</a></div><h3 class="mm-title">Shop by category</h3>' + acc + '<div class="mm-links"><a href="stores.html">Store locator</a><a href="my-account.html?tab=orders">Track order</a><a href="my-account.html">My account</a><a href="contact.html">Contact us</a><a href="tel:' + BR.hotlineTel + '"><i class="fa-solid fa-phone" aria-hidden="true"></i> ' + esc(BR.hotline) + '</a></div></div></div>' +
-      '<button type="button" class="kv-opt-fab" data-bs-toggle="offcanvas" data-bs-target="#kv-options" aria-controls="kv-options"><i class="fa-solid fa-gear" aria-hidden="true"></i><span>Theme options</span></button>' +
-      '<div class="offcanvas offcanvas-start kv-drawer" id="kv-options" tabindex="-1" aria-labelledby="kv-opt-title" data-bs-scroll="true" data-bs-backdrop="false" data-bs-keyboard="true"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-opt-title">Theme options</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close theme options"></button></div><div class="offcanvas-body"><p class="opt-note">Switch layouts live. Choices are saved in this browser.</p>' + opts + '<button type="button" class="button btn-kv-outline" data-kv-opt-reset>Reset to defaults</button></div></div>' +
+      '<button type="button" class="kv-opt-fab" aria-label="Theme options" data-bs-toggle="offcanvas" data-bs-target="#kv-options" aria-controls="kv-options"><i class="fa-solid fa-gear" aria-hidden="true"></i><span>Theme options</span></button>' +
+      '<div class="offcanvas offcanvas-start kv-drawer" id="kv-options" tabindex="-1" aria-labelledby="kv-opt-title" data-bs-scroll="true" data-bs-backdrop="false" data-bs-keyboard="true"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-opt-title">Theme options</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close theme options"></button></div><div class="offcanvas-body"><p class="opt-note">Explore the client presentation. Every choice updates the store and stays saved in this browser.</p>' + presets + '<div class="opt-share"><label for="kv-preview-url">Your selected design</label><div><input id="kv-preview-url" type="url" readonly aria-label="Preview link"><button type="button" class="button" data-kv-copy>Copy link</button></div><p id="kv-copy-status" role="status"></p><a href="index.html" data-kv-preview-home>Preview these choices on the homepage</a></div>' + opts + '<button type="button" class="button btn-kv-outline" data-kv-opt-reset>Reset to defaults</button></div></div>' +
       '<a class="kv-wa" href="https://wa.me/' + BR.whatsapp + '" aria-label="Chat on WhatsApp" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></a>' +
       '<div class="kv-compare-bar" hidden><div class="container cmp-row"><ul class="cmp-thumbs"></ul><div class="cmp-actions"><button type="button" class="button alt" data-kv-compare-open>Compare (<span class="cmp-n">0</span>)</button><button type="button" class="link-btn" data-kv-compare-clear>Clear</button></div></div></div>' +
       '<div class="offcanvas offcanvas-end kv-drawer kv-drawer-wide" id="kv-compare-drawer" tabindex="-1" aria-labelledby="kv-cmp-title"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-cmp-title">Compare products</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button></div><div class="offcanvas-body" id="kv-compare-body"></div></div>' +
       '<div class="modal fade" id="kv-quick" tabindex="-1" aria-labelledby="kv-quick-title" aria-hidden="true"><div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content"><div class="modal-header border-0"><h2 class="visually-hidden" id="kv-quick-title">Quick view</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close quick view"></button></div><div class="modal-body" id="kv-quick-body"></div></div></div></div>';
     b.appendChild(wrap);
+    b.insertBefore($('.kv-skip', wrap), b.firstChild);
     var cur = function (n) { return page === n ? ' aria-current="page" class="active"' : ''; };
     var bar = d.createElement('nav'); bar.className = 'kv-bottombar d-lg-none'; bar.setAttribute('aria-label', 'Quick navigation');
-    bar.innerHTML = '<a href="index.html"' + cur('index.html') + '><i class="fa-solid fa-house" aria-hidden="true"></i><span>Home</span></a><button type="button" data-bs-toggle="offcanvas" data-bs-target="#kv-mobile-menu" aria-controls="kv-mobile-menu"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i><span>Categories</span></button><a href="easy-payment.html"' + cur('easy-payment.html') + '><i class="fa-solid fa-calendar-check" aria-hidden="true"></i><span>Easy Pay</span></a><a href="cart.html" data-kv-open-cart' + (page === 'cart.html' ? ' class="active"' : '') + '><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="hdr-count" data-kv-cart-count>0</span><span>Cart</span></a><a href="my-account.html"' + cur('my-account.html') + '><i class="fa-regular fa-user" aria-hidden="true"></i><span>Account</span></a>';
+    bar.innerHTML = '<a href="shop.html"' + cur('shop.html') + '><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i><span>Shop</span></a><button type="button" data-kv-mobile-search aria-label="Search products"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Search</span></button><a href="cart.html" data-kv-open-cart' + cur('cart.html') + '><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="hdr-count" data-kv-cart-count>0</span><span>Cart</span></a><a href="my-account.html"' + cur('my-account.html') + '><i class="fa-regular fa-user" aria-hidden="true"></i><span>Account</span></a>';
     b.appendChild(bar);
+    var searchModal = d.createElement('div'); searchModal.className = 'modal fade kv-search-modal'; searchModal.id = 'kv-search-modal'; searchModal.tabIndex = -1; searchModal.setAttribute('aria-labelledby', 'kv-search-title'); searchModal.setAttribute('aria-hidden', 'true');
+    searchModal.innerHTML = '<div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h2 id="kv-search-title">Find your next upgrade</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close search"></button></div><div class="modal-body">' + searchForm('mobile-modal', false) + '<p class="search-hint">Search by product, brand or model number.</p><div class="search-quick"><a href="shop.html?cat=furniture">Furniture</a><a href="shop.html?cat=refrigerators">Refrigerators</a><a href="shop.html?sort=deals">Current deals</a></div></div></div></div>';
+    b.appendChild(searchModal); searchModal.addEventListener('shown.bs.modal', function () { $('input', searchModal).focus(); });
+    searchModal.addEventListener('hidden.bs.modal', function () { $$('.kv-suggest', searchModal).forEach(function (e) { e.hidden = true; }); if (searchTrigger && d.contains(searchTrigger)) searchTrigger.focus(); });
     $('#kv-options').addEventListener('show.bs.offcanvas', syncOptUi);
     d.addEventListener('pointerdown', function (e) {
       var panel = $('#kv-options'), fab = $('.kv-opt-fab');
@@ -407,6 +444,10 @@
     var home = d.body.classList.contains('home');
     $$('.opt-group, .opt-gh').forEach(function (g) { g.hidden = g.getAttribute('data-opt-home') === 'true' && !home; });
     $$('[data-kv-opt]').forEach(function (r) { r.checked = optState[r.getAttribute('data-kv-opt')] === r.value; });
+    $$('[data-kv-preset]').forEach(function (b) { var p = PRESETS.filter(function (p) { return p.id === b.dataset.kvPreset; })[0]; b.setAttribute('aria-pressed', Object.keys(OPT_DEF).every(function (k) { return optState[k] === p[k]; })); });
+    var input = $('#kv-preview-url'); if (input) input.value = KV.options.url();
+    var homeLink = $('[data-kv-preview-home]'); if (homeLink) homeLink.href = KV.options.url(new URL('index.html', w.location.href).href);
+
   }
 
   /* ---------- quick view & compare UI ---------- */
@@ -434,24 +475,34 @@
   /* ---------- slider ---------- */
   KV.slider = function (root, o) {
     if (!root || root.__kv) return; root.__kv = 1;
-    var track = $('.kv-slides', root), slides = $$('.kv-slide', root), n = slides.length, i = 0, timer = null, playing = true;
-    var reduce = w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches; if (reduce) playing = false;
-    root.setAttribute('role', 'region'); root.setAttribute('aria-roledescription', 'carousel'); if (!root.getAttribute('aria-label')) root.setAttribute('aria-label', 'Featured offers');
+    var track = $('.kv-slides', root), slides = $$('.kv-slide', root), n = slides.length, i = 0, timer = null;
+    if (!n) return;
+    var reduce = w.matchMedia && w.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var playing = !reduce, hovering = false, focused = false;
+    root.setAttribute('role', 'region'); root.setAttribute('aria-roledescription', 'carousel'); root.setAttribute('aria-label', 'Featured offers');
     var ui = d.createElement('div'); ui.className = 'kv-slider-ui';
-    ui.innerHTML = '<button type="button" class="s-prev" aria-label="Previous slide"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button><button type="button" class="s-next" aria-label="Next slide"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button><div class="s-dots">' + slides.map(function (_, k) { return '<button type="button" data-i="' + k + '" aria-label="Go to slide ' + (k + 1) + '"></button>'; }).join('') + '<button type="button" class="s-pause" aria-label="Pause slideshow"><i class="fa-solid fa-pause" aria-hidden="true"></i></button></div>';
-    root.appendChild(ui);
-    function go(k) { i = (k + n) % n; track.style.transform = 'translateX(-' + (i * 100) + '%)'; slides.forEach(function (s, j) { s.setAttribute('aria-hidden', j !== i); s.setAttribute('role', 'group'); s.setAttribute('aria-label', (j + 1) + ' of ' + n); $$('a,button', s).forEach(function (e) { e.tabIndex = j === i ? 0 : -1; }); }); $$('.s-dots [data-i]', ui).forEach(function (b, j) { b.classList.toggle('on', j === i); if (j === i) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); }); }
-    function tick() { clearInterval(timer); if (playing && n > 1) timer = setInterval(function () { go(i + 1); }, (o && o.interval) || 6500); }
+    ui.innerHTML = '<button type="button" class="s-prev" aria-label="Previous slide"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button><button type="button" class="s-next" aria-label="Next slide"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button><div class="s-dots">' + slides.map(function (_, k) { return '<button type="button" data-i="' + k + '" aria-label="Go to slide ' + (k + 1) + '"></button>'; }).join('') + '<button type="button" class="s-pause" aria-label="' + (playing ? 'Pause' : 'Play') + ' slideshow"><i class="fa-solid fa-' + (playing ? 'pause' : 'play') + '" aria-hidden="true"></i></button></div><span class="visually-hidden" aria-live="polite" data-slide-status></span>';
+    root.appendChild(ui); ui.hidden = n < 2;
+    function go(k, manual) {
+      i = (k + n) % n; track.style.transform = 'translateX(-' + (i * 100) + '%)';
+      slides.forEach(function (s, j) { s.setAttribute('aria-hidden', j !== i); s.setAttribute('role', 'group'); s.setAttribute('aria-roledescription', 'slide'); s.setAttribute('aria-label', (j + 1) + ' of ' + n); $$('a,button', s).forEach(function (e) { e.tabIndex = j === i ? 0 : -1; }); });
+      $$('.s-dots [data-i]', ui).forEach(function (b, j) { b.classList.toggle('on', j === i); if (j === i) b.setAttribute('aria-current', 'true'); else b.removeAttribute('aria-current'); });
+      if (manual) $('[data-slide-status]', ui).textContent = 'Slide ' + (i + 1) + ' of ' + n;
+    }
+    function tick() { clearInterval(timer); if (playing && !hovering && !focused && !d.hidden && n > 1) timer = setInterval(function () { go(i + 1); }, (o && o.interval) || 6500); }
     ui.addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return;
-      if (b.classList.contains('s-prev')) go(i - 1); else if (b.classList.contains('s-next')) go(i + 1);
+      if (b.classList.contains('s-prev')) go(i - 1, true); else if (b.classList.contains('s-next')) go(i + 1, true);
       else if (b.classList.contains('s-pause')) { playing = !playing; b.setAttribute('aria-label', playing ? 'Pause slideshow' : 'Play slideshow'); $('i', b).className = playing ? 'fa-solid fa-pause' : 'fa-solid fa-play'; }
-      else if (b.hasAttribute('data-i')) go(+b.getAttribute('data-i'));
-      tick();
+      else if (b.hasAttribute('data-i')) go(+b.getAttribute('data-i'), true); tick();
     });
-    root.addEventListener('mouseenter', function () { clearInterval(timer); }); root.addEventListener('mouseleave', tick); root.addEventListener('focusin', function () { clearInterval(timer); });
+    root.addEventListener('mouseenter', function () { hovering = true; tick(); }); root.addEventListener('mouseleave', function () { hovering = false; tick(); });
+    root.addEventListener('focusin', function () { focused = true; tick(); }); root.addEventListener('focusout', function (e) { focused = root.contains(e.relatedTarget); tick(); });
+    root.addEventListener('keydown', function (e) { if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') { e.preventDefault(); go(i + (e.key === 'ArrowRight' ? 1 : -1), true); tick(); } });
     var sx = null; root.addEventListener('touchstart', function (e) { sx = e.touches[0].clientX; }, { passive: true });
-    root.addEventListener('touchend', function (e) { if (sx == null) return; var dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 40) { go(i + (dx < 0 ? 1 : -1)); tick(); } sx = null; });
+    root.addEventListener('touchend', function (e) { if (sx == null) return; var dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 40) { go(i + (dx < 0 ? 1 : -1), true); tick(); } sx = null; });
+    d.addEventListener('visibilitychange', tick);
+    root.__dispose = function () { clearInterval(timer); d.removeEventListener('visibilitychange', tick); };
     go(0); tick();
   };
   KV.countdown = function (el, end) {
@@ -460,9 +511,29 @@
   };
 
   /* ---------- delegated events ---------- */
+  function closeNavMenus(restoreFocus) {
+    $$('[data-kv-menu-toggle][aria-expanded="true"]').forEach(function (button) {
+      button.setAttribute('aria-expanded', 'false');
+      var panel = d.getElementById(button.getAttribute('aria-controls')); if (panel) panel.hidden = true;
+      if (restoreFocus) button.focus();
+    });
+  }
+  var searchTrigger;
   function bindEvents() {
     d.addEventListener('click', function (e) {
       var t = e.target, el;
+      if ((el = t.closest('[data-kv-mobile-search]'))) { searchTrigger = el; if (w.bootstrap) w.bootstrap.Modal.getOrCreateInstance($('#kv-search-modal')).show(); return; }
+      if ((el = t.closest('[data-kv-menu-toggle]'))) { var expanded = el.getAttribute('aria-expanded') === 'true'; closeNavMenus(false); if (!expanded) { el.setAttribute('aria-expanded', 'true'); d.getElementById(el.getAttribute('aria-controls')).hidden = false; } return; }
+      if (!t.closest('.department-item, .has-mega')) closeNavMenus(false);
+      if ((el = t.closest('[data-kv-preset]'))) { KV.options.preset(el.dataset.kvPreset); return; }
+      if ((el = t.closest('[data-kv-copy]'))) {
+        var input = $('#kv-preview-url'), status = $('#kv-copy-status'); input.value = KV.options.url();
+        function fallback() { input.focus(); input.select(); status.textContent = 'Link selected. Copy it to share this exact design.'; }
+        if (w.navigator.clipboard && w.isSecureContext) w.navigator.clipboard.writeText(input.value).then(function () { status.textContent = 'Link copied. It includes all your design choices.'; }, fallback); else fallback(); return;
+      }
+      if ((el = t.closest('[data-kv-social]'))) { e.preventDefault(); KV.notice(esc(el.dataset.kvSocial) + ' page will be linked once the client confirms the official account.', 'info'); return; }
+      if ((el = t.closest('[data-kv-categories]'))) { var open = el.getAttribute('aria-expanded') !== 'true'; el.setAttribute('aria-expanded', open); el.closest('.allcats').classList.toggle('is-open', open); return; }
+      if (!t.closest('.allcats')) { $$('.allcats.is-open').forEach(function (c) { c.classList.remove('is-open'); $('[data-kv-categories]', c).setAttribute('aria-expanded', 'false'); }); }
       if ((el = t.closest('[data-kv-add]'))) {
         e.preventDefault();
         var qi = el.getAttribute('data-kv-qty-input'), q = el.getAttribute('data-qty') || (qi && $(qi) && $(qi).value) || 1;
@@ -494,17 +565,19 @@
       box.innerHTML = m.length ? m.map(function (p) { return '<li><a href="' + KV.url(p) + '"><img src="' + esc(p.images[0]) + '" alt="" width="40" height="40"><span>' + esc(p.name) + '</span><b>' + KV.fmt(p.price) + '</b></a></li>'; }).join('') : '<li class="none">No products found</li>';
       box.hidden = false;
     });
-    d.addEventListener('keydown', function (e) { if (e.key === 'Escape') $$('.kv-suggest').forEach(function (u) { u.hidden = true; }); });
+    d.addEventListener('keydown', function (e) { if (e.key === 'Escape') { var searchDialog = $('#kv-search-modal.show'); if (searchDialog && w.bootstrap) w.bootstrap.Modal.getOrCreateInstance(searchDialog).hide(); closeNavMenus(true); $$('.kv-suggest').forEach(function (u) { u.hidden = true; }); $$('.allcats.is-open').forEach(function (c) { c.classList.remove('is-open'); var b = $('[data-kv-categories]', c); b.setAttribute('aria-expanded', 'false'); b.focus(); }); } });
     w.addEventListener('kv:cart', function () { KV.sync(); renderCart(); });
     w.addEventListener('kv:wishlist', KV.sync);
     w.addEventListener('kv:compare', function () { KV.sync(); renderCompareBar(); if ($('#kv-compare-drawer.show')) renderCompareDrawer(); });
-    w.addEventListener('storage', function (e) { if (e.key === 'kv-cart') { cartData = load('kv-cart', []); KV.sync(); renderCart(); } });
+    w.addEventListener('storage', function (e) { if (e.key === 'kv-cart') { cartData = cleanCart(load('kv-cart', [])); emit('cart', { action: 'storage' }); } });
   }
 
   /* ---------- init ---------- */
   function init() {
     applyOpts(); buildShared(); bindEvents();
     KV.renderHeader(); KV.renderFooter(); renderCart(); renderCompareBar(); KV.sync();
+    var mobileQuery = w.matchMedia('(max-width: 991.98px)');
+    if (mobileQuery.addEventListener) mobileQuery.addEventListener('change', function () { applyOpts(); emit('options', { key: 'card' }); });
     inited = true; readyQ.forEach(function (f) { f(); }); readyQ = [];
   }
   if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', init); else init();

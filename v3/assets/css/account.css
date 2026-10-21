@@ -122,3 +122,10 @@ input.is-invalid, select.is-invalid { border-color: var(--color-sale); } .field-
   .woocommerce-account .woocommerce > *, .woocommerce-MyAccount-navigation, .woocommerce-MyAccount-content { min-width: 0; max-width: 100%; }
   .woocommerce-MyAccount-navigation { overflow-x: auto; }
 }
+
+/* Keep wide comparisons inside their own scroll region, including hidden labels. */
+.table-responsive, .sched-wrap { position: relative; max-width: 100%; min-width: 0; }
+.table-responsive > .ep-table { display: table; max-width: none; overflow: visible; }
+.woocommerce-MyAccount-content, .plan-card, .plan-head > div { min-width: 0; }
+.plan-actions { flex-wrap: wrap; }
+.plan-actions > a { max-width: 100%; white-space: normal; line-height: 1.4; padding-block: 10px; }

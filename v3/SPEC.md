@@ -1,5 +1,7 @@
 # Kavindu Online Store — v3 Build Spec (WooCommerce-ready, real-business look)
 
+**Current implementation rules (22 October 2026):** `README.md` and `../CLIENT-REVIEW.md` record the verified client-presentation revision. Keep all design options. Hero/banner slots are image-only; current desktop hero height is 560px in all layouts. Standard cards are bordered, fully clickable, with favourite/Add to cart and no stock or finance lines. The older component descriptions below are historical where they conflict. No real payment, authentication, document submission or email service is connected.
+
 Client: **Kavindu Enterprises** (Sri Lanka). Store: **Kavindu Online Store**. Sells home & office furniture, home appliances
 (fridges, washing machines, AC, kitchen), TVs/audio, laptops/phones. Has showrooms. Key feature: **Easy Payment** — in-house
 monthly instalments (cash price lowest; monthly plan costs more; formula from client still pending → placeholder table in data.js).
@@ -98,3 +100,13 @@ Logo: ../assets/img/logo.svg (copy to v3/assets/img/), payment logos in v3/asset
 - INFO: stores.html, about.html, contact.html, policies.html, assets/css/info.css, assets/js/info.js
 - ADMIN: admin/** only
 Every storefront page: `<div id="site-header"></div>` … `<div id="site-footer"></div>`, loads theme.css, data.js, theme.js (+ own css/js). Asset URLs end with `?v=1`.
+
+
+### Completed navigation options (22 October 2026)
+Desktop navigation is independently selectable with `menu-1` (standard links), `menu-2` (category icons), or `menu-3` (department mega menu), alongside all existing layout options. Shared preview links preserve this choice. Mobile quick navigation is exactly Shop, Search, Cart, Account. Easy Payment and all departments remain available in the mobile menu. See `../CLIENT-REVIEW.md` for verification coverage.
+
+
+### Mobile options and search — 22 October 2026
+Three independent mobile controls are available in Theme options: `mheader` (retail / compact / search first), `bottom` (standard / floating pill / compact tiles), and `mcard` (retail grid / image first / detailed list). Each has values 1–3, persists locally, is included in preview links, and resets with the complete design. Desktop header/card selections remain independent; card markup updates at the 992px breakpoint. All bottom styles contain exactly Shop, Search, Cart, Account. The logo links home. Search opens an accessible dialog with autofocus, suggestions, no-results feedback, category shortcuts, Escape dismissal and search form submission. Image-first card actions remain visible on mobile.
+
+Verification: all three values in both skins at 375px, all 27 mobile combinations in Modern at 320px, real search submission and no-results state, live radio updates, desktop/mobile breakpoint restoration, and 11 passing runtime tests. A targeted read-only code review found no remaining issues. Screenshots: `review/mobile-search.jpg` and `review/mobile-options.jpg` under the workspace root. Changes remain local.

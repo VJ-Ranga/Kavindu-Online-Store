@@ -42,6 +42,7 @@
   /* ================= CHECKOUT ================= */
   function initCheckout(root) {
     ensureSample();
+    var submitting = false;
     var st = { method: 'payhere', ship: getShip(), months: 12, instMonths: 6, bank: '' };
     if (!KV.cart.count()) { emptyState(root); return; }
     var D = KV_DATA, districts = D.districts;
@@ -113,6 +114,7 @@
       return { items: items, sub: sub, c: c, disc: disc, fee: fee, total: total, dist: dist };
     }
     function renderReview() {
+      var pickup = d.getElementById('pickup_store'), selectedPickup = pickup && pickup.value;
       var t = calc();
       var rows = t.items.map(function (i) { return '<tr class="cart_item"><td class="product-name">' + esc(i.product.name) + ' <strong class="product-quantity">&times;&nbsp;' + i.qty + '</strong></td><td class="product-total">' + KV.price(i.product.price * i.qty) + '</td></tr>'; }).join('');
       var shipList = SHIP.map(function (s) {
@@ -124,6 +126,7 @@
         '<tr class="cart-subtotal"><th>Subtotal</th><td>' + KV.price(t.sub) + '</td></tr>' + (t.disc ? '<tr class="cart-discount"><th>Coupon: ' + t.c.toLowerCase() + '</th><td>-' + KV.price(t.disc) + '</td></tr>' : '') +
         '<tr class="woocommerce-shipping-totals shipping"><th>Shipping</th><td><ul id="shipping_method" class="woocommerce-shipping-methods">' + shipList + pick + '</ul></td></tr>' +
         '<tr class="order-total"><th>Total</th><td><strong>' + KV.price(t.total) + '</strong></td></tr></tfoot></table>';
+      if (selectedPickup && d.getElementById('pickup_store')) d.getElementById('pickup_store').value = selectedPickup;
       var third = Math.ceil(t.total / 3);
       d.getElementById('pb-koko').innerHTML = '<p>Split your purchase into <strong>3 interest-free payments</strong> of about <strong>' + fmt(third) + '</strong>. No fees if you pay on time. You will be redirected to Koko to sign in and confirm.</p>';
       d.getElementById('pb-mintpay').innerHTML = '<p>Pay later in <strong>3 interest-free instalments</strong> of about <strong>' + fmt(third) + '</strong>. You will be redirected to Mintpay to confirm your plan and pay the first instalment by card.</p>';
@@ -131,7 +134,7 @@
       d.getElementById('inst-opts').innerHTML = opts;
       var eMonths = parseInt(d.getElementById('easy_months').value, 10) || 12, ep = KV.calc(t.total, D.easyPayment.minDownPct, eMonths);
       d.getElementById('pb-easy').innerHTML = t.total < D.easyPayment.minPrice ? '<p class="text-sale small">Easy Payment is available for orders of ' + fmt(D.easyPayment.minPrice) + ' or more.</p>' :
-        '<dl class="easy-sum"><div><dt>Down payment (' + D.easyPayment.minDownPct + '%)</dt><dd>' + fmt(ep.down) + '</dd></div><div><dt>Monthly payment</dt><dd><strong>' + fmt(ep.monthly) + ' x ' + eMonths + '</strong></dd></div><div><dt>Total payable</dt><dd>' + fmt(ep.total) + '</dd></div></dl><p class="small text-muted-kv">Indicative figures. The final plan is confirmed when your application is approved.</p>';
+        '<dl class="easy-sum"><div><dt>Down payment (' + D.easyPayment.minDownPct + '%)</dt><dd>' + fmt(ep.down) + '</dd></div><div><dt>Monthly payment</dt><dd><strong>' + fmt(ep.monthly) + ' x ' + eMonths + '</strong></dd></div><div><dt>Total payable</dt><dd>' + fmt(ep.total) + '</dd></div></dl>' + KV.planNote(ep) + '<p class="small text-muted-kv">Indicative figures. The final plan is confirmed when your application is approved.</p>';
       var btn = d.getElementById('place_order');
       btn.textContent = st.method === 'cod' || st.method === 'bacs' ? 'Place order' : st.method === 'easy_payment' ? 'Place order and apply' : 'Place order and pay';
     }
@@ -187,6 +190,8 @@
     }
     form.addEventListener('submit', function (e) {
       e.preventDefault();
+      if (submitting) return;
+      if (!KV.cart.count()) { emptyState(root); return; }
       var bad = validateAll(), n = d.getElementById('co-notices');
       if (bad.length) {
         n.innerHTML = '<ul class="woocommerce-error" role="alert" tabindex="-1">' + bad.map(function (el) {
@@ -209,12 +214,13 @@
       if (st.method === 'payhere_instalment') o.inst = { bank: val('inst_bank'), months: st.instMonths };
       if (st.method === 'easy_payment') { var months = parseInt(val('easy_months'), 10) || 12; o.plan = KV.calc(t.total, D.easyPayment.minDownPct, months); o.plan.ref = 'EP-' + (100000 + no * 7 % 899999); }
       var all = orders(); all.push(o); KV.save('kv-orders', all);
-      KV.cart.clear(); KV.save('kv-coupon', '');
+      submitting = true; KV.cart.clear(); KV.save('kv-coupon', '');
       var btn = d.getElementById('place_order'); btn.disabled = true; btn.textContent = 'Processing…';
       location.href = m.gw ? 'pay.html?gw=' + m.gw + '&order=' + no : 'order-received.html?order=' + no + '&key=' + o.key;
     });
     root.addEventListener('click', function (e) { var a = e.target.closest('[data-focus]'); if (a) { e.preventDefault(); var el = d.getElementById(a.getAttribute('data-focus')); if (el) el.focus(); } });
-    w.addEventListener('kv:cart', function () { if (!KV.cart.count()) location.reload(); });
+    function cartChanged() { if (submitting) return; if (!KV.cart.count()) { w.removeEventListener('kv:cart', cartChanged); emptyState(root); return; } if (d.getElementById('order_review')) renderReview(); }
+    w.addEventListener('kv:cart', cartChanged);
   }
 
   /* ================= ORDER RECEIVED ================= */
@@ -224,13 +230,14 @@
     var o = findOrder(qs.get('order'));
     var smp = qs.get('sample');
     if (!o && smp && smp !== '1') {
-      var meth = methodOf(smp) || methodOf('bacs'), items = ['innovex-no-frost-inverter-fridge-250l', 'panasonic-25l-microwave'].map(function (id) { return KV.product(id); });
+      var sampleNo = /^(?:KV-\d{1,10}|EP-\d{4}-\d{1,10}|\d{1,10})$/.test(qs.get('number') || '') ? qs.get('number') : 1042;
+      var meth = methodOf(smp) || methodOf('bacs'), sampleProduct = KV.product(qs.get('product')), items = sampleProduct ? [sampleProduct] : ['innovex-no-frost-inverter-fridge-250l', 'panasonic-25l-microwave'].map(function (id) { return KV.product(id); });
       var sub = items.reduce(function (s, p) { return s + p.price; }, 0);
-      o = { number: 1042, key: 'wc_order_sample', date: new Date().toISOString(), status: meth.id === 'cod' ? 'processing' : (meth.gw ? 'processing' : 'on-hold'), items: items.map(function (p) { return { id: p.id, name: p.name, qty: 1, price: p.price }; }),
+      o = { number: sampleNo, key: 'wc_order_sample', date: new Date().toISOString(), status: meth.id === 'cod' ? 'processing' : (meth.gw ? 'processing' : 'on-hold'), items: items.map(function (p) { return { id: p.id, name: p.name, qty: 1, price: p.price }; }),
         subtotal: sub, discount: 0, shipping: 0, shipLabel: 'Standard delivery (islandwide)', total: sub, method: meth.id, methodTitle: meth.title, gw: meth.gw || '',
         billing: { first: 'Nimal', last: 'Perera', phone: '077 123 4567', email: 'nimal@example.com', address1: '14 Temple Road', city: 'Avissawella', district: 'Colombo', postcode: '10700', country: 'Sri Lanka' }, notes: '' };
       if (meth.gw) o.pay = { ref: 'PH' + 4821937, at: o.date, via: meth.gw };
-      if (meth.id === 'easy_payment') o.plan = Object.assign(KV.calc(sub, 20, 12), { ref: 'EP-104207' });
+      if (meth.id === 'easy_payment') { o.plan = Object.assign(KV.calc(sub, 25, 12), { ref: String(sampleNo) }); }
     }
     if (!o) { root.innerHTML = '<p class="woocommerce-notice woocommerce-notice--error woocommerce-error" role="alert">We could not find that order. It may have expired, or the link is incomplete.</p><p class="return-to-shop"><a class="button wc-backward" href="shop.html">Return to shop</a> <a class="button btn-kv-outline" href="order-received.html?sample=bacs">View a sample order</a></p>'; return; }
     d.title = 'Order received | Kavindu Online Store';
@@ -239,13 +246,13 @@
       '<p class="woocommerce-notice woocommerce-notice--success woocommerce-thankyou-order-received"><i class="fa-solid fa-circle-check" aria-hidden="true"></i> Thank you. Your order has been received.</p>';
     var rows = o.items.map(function (i) { return '<tr class="woocommerce-table__line-item order_item"><td class="woocommerce-table__product-name product-name">' + esc(i.name) + ' <strong class="product-quantity">&times;&nbsp;' + i.qty + '</strong></td><td class="woocommerce-table__product-total product-total">' + KV.price(i.price * i.qty) + '</td></tr>'; }).join('');
     var extra = '';
-    if (unpaid) extra = '<div class="co-panel"><h2>Complete your payment</h2><p>Your order is reserved. Pay with ' + esc(o.methodTitle) + ' to confirm it.</p><a class="button alt" href="pay.html?gw=' + o.gw + '&order=' + o.number + '">Pay now</a></div>';
+    if (unpaid) extra = '<div class="co-panel"><h2>Complete your payment</h2><p>Your order is reserved. Pay with ' + esc(o.methodTitle) + ' to confirm it.</p><a class="button alt" href="pay.html?gw=' + o.gw + '&order=' + encodeURIComponent(o.number) + '">Pay now</a></div>';
     else if (o.method === 'bacs') extra = '<section class="woocommerce-bacs-bank-details co-panel"><h2 class="wc-bacs-bank-details-heading">Our bank details</h2><p>Please transfer <strong>' + fmt(o.total) + '</strong> and use <strong>Order ' + o.number + '</strong> as the payment reference. Email the slip to <a href="mailto:' + esc(KV_DATA.brand.email) + '">' + esc(KV_DATA.brand.email) + '</a> or send it on WhatsApp. We dispatch once the funds clear.</p>' +
       '<h3 class="wc-bacs-bank-details-account-name">' + BANK.name + '</h3><ul class="wc-bacs-bank-details order_details bacs_details"><li class="bank_name">Bank: <strong>' + BANK.bank + '</strong></li><li class="branch">Branch: <strong>' + BANK.branch + '</strong></li><li class="account_number">Account number: <strong>' + BANK.no + '</strong></li><li class="sort_code">SWIFT / BIC: <strong>' + BANK.swift + '</strong></li></ul><p class="small text-muted-kv">Bank details shown are placeholders until confirmed by the client.</p></section>';
     else if (o.method === 'cod') extra = '<div class="co-panel"><h2>Cash on delivery</h2><p>Please keep <strong>' + fmt(o.total) + '</strong> ready when our team delivers your order. We will call you on <strong>' + esc(b.phone) + '</strong> to arrange a delivery time.</p></div>';
     else if (o.method === 'easy_payment' && o.plan) extra = '<div class="co-panel co-easy"><span class="status-pill pending">Pending approval</span><h2>Your Easy Payment application</h2><p>Reference <strong>' + esc(o.plan.ref) + '</strong>. Your order is on hold until our team reviews your application and confirms the plan below. Complete the application with your employment details and documents so we can approve it faster.</p>' +
-      '<dl class="easy-sum"><div><dt>Down payment</dt><dd>' + fmt(o.plan.down) + '</dd></div><div><dt>Monthly payment</dt><dd><strong>' + fmt(o.plan.monthly) + ' x ' + o.plan.months + '</strong></dd></div><div><dt>Total payable</dt><dd>' + fmt(o.plan.total) + '</dd></div></dl><a class="button btn-kv-easy" href="easy-payment.html?order=' + o.number + '&ref=' + esc(o.plan.ref) + '">Continue your application</a></div>';
-    else if (o.gw && o.pay) extra = '<div class="co-panel"><h2>Payment received</h2><p>Paid with ' + esc(o.methodTitle) + (o.inst ? ' (' + o.inst.months + ' months, ' + esc(o.inst.bank) + ')' : '') + '. Payment reference <strong>' + esc(o.pay.ref) + '</strong>. A confirmation has been sent to ' + esc(b.email) + '.</p></div>';
+      '<dl class="easy-sum"><div><dt>Down payment</dt><dd>' + fmt(o.plan.down) + '</dd></div><div><dt>Monthly payment</dt><dd><strong>' + fmt(o.plan.monthly) + ' x ' + o.plan.months + '</strong></dd></div><div><dt>Total payable</dt><dd>' + fmt(o.plan.total) + '</dd></div></dl>' + KV.planNote(o.plan) + '<a class="button btn-kv-easy" href="easy-payment.html?order=' + o.number + '&months=' + o.plan.months + '&down=' + Math.round(o.plan.down / (o.plan.total - o.plan.extra) * 100) + '&price=' + (o.plan.total - o.plan.extra) + '&ref=' + esc(o.plan.ref) + '">Continue your application</a></div>';
+    else if (o.gw && o.pay) extra = '<div class="co-panel"><h2>Payment received</h2><p>Paid with ' + esc(o.methodTitle) + (o.inst ? ' (' + o.inst.months + ' months, ' + esc(o.inst.bank) + ')' : '') + '. Payment reference <strong>' + esc(o.pay.ref) + '</strong>. Preview confirmation for ' + esc(b.email) + '.</p></div>';
     root.innerHTML = head + '<ul class="woocommerce-order-overview woocommerce-thankyou-order-details order_details">' +
       '<li class="woocommerce-order-overview__order order">Order number: <strong>' + o.number + '</strong></li><li class="woocommerce-order-overview__date date">Date: <strong>' + dateStr(o.date) + '</strong></li>' +
       '<li class="woocommerce-order-overview__email email">Email: <strong>' + esc(b.email) + '</strong></li><li class="woocommerce-order-overview__total total">Total: <strong>' + KV.price(o.total) + '</strong></li>' +
@@ -261,7 +268,7 @@
 
   KV.ready(function () {
     var r;
-    if ((r = d.getElementById('checkout-root'))) initCheckout(r);
+    if ((r = d.getElementById('checkout-root'))) { var checkoutHost = r; initCheckout(checkoutHost); w.addEventListener('kv:cart', function () { if (KV.cart.count() && !checkoutHost.querySelector('#co-form')) initCheckout(checkoutHost); }); }
     else if ((r = d.getElementById('order-root'))) initOrder(r);
   });
 })(window, document);

@@ -6,11 +6,12 @@
 
   /* ---------- hero ---------- */
   function pic(b, eager) {
-    return '<picture>' + (b.imgMobile ? '<source media="(max-width:767px)" srcset="' + esc(b.imgMobile) + '">' : '') + '<img src="' + esc(b.img) + '" alt="' + esc(b.alt || '') + '" ' + (eager ? 'fetchpriority="high"' : 'loading="lazy"') + ' decoding="async"></picture>';
+    return '<picture>' + (b.imgMobile ? '<source media="(max-width:767px)" srcset="' + esc(b.imgMobile) + '">' : '') + '<img src="' + esc(b.img) + '" alt="' + esc(b.alt || '') + '" ' + (eager ? 'loading="eager" fetchpriority="high"' : 'loading="lazy"') + ' width="1320" height="520" decoding="async"></picture>';
   }
   function slide(s, i) { return '<div class="kv-slide kv-imgslide"><a href="' + esc(s.link) + '">' + pic(s, !i) + '</a></div>'; }
   function sideBanner(b) { return '<a class="side-banner kv-imgbanner" href="' + esc(b.link) + '">' + pic(b) + '</a>'; }
   function hero() {
+    $$('.kv-slider', $('#home-hero')).forEach(function (slider) { if (slider.__dispose) slider.__dispose(); });
     var o = d.body.getAttribute('data-hero') || '1', B = D.banners, h;
     if (o === '2') {
       var s = B.slides[1];
@@ -48,6 +49,7 @@
   function head(r, extra) { return '<div class="kv-section-head"><span class="kv-eyebrow">' + r.eyebrow + '</span><h2>' + r.title + '</h2>' + (extra || '') + '<a class="kv-viewall" href="' + r.link + '">View all <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div>'; }
   function railHtml(r, o) {
     var all = r.list(), h;
+    if (!all.length) return head(r) + '<p class="woocommerce-info">No products in this group yet.</p>';
     if (o === '2') {
       h = head(r, '<span class="rail-arrows"><button type="button" data-scroll="-1" aria-label="Scroll left"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button><button type="button" data-scroll="1" aria-label="Scroll right"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button></span>') +
         '<div class="rail-carousel"><div class="rail-track" tabindex="0" role="group" aria-label="' + esc(r.title) + '">' + KV.grid(all.slice(0, 10), { cls: 'rail-list' }) + '</div></div>';
@@ -56,7 +58,7 @@
       h = head(r, r.deal ? '<span class="deal-timer-wrap">Ends in <span class="deal-timer" data-end></span></span>' : '') +
         '<div class="rail-deal"><article class="deal-feature"><span class="deal-flag">' + (r.deal ? 'Deal of the day' : 'Top pick') + '</span><a href="' + KV.url(f) + '" class="df-img"><img src="' + esc(f.images[0]) + '" alt="' + esc(f.name) + '"></a><div class="df-info"><span class="product-brand">' + esc(f.brand) + '</span><h3><a href="' + KV.url(f) + '">' + esc(f.name) + '</a></h3><p class="product-keyspec">' + esc(f.keySpec) + '</p>' + KV.priceBlock(f) + (KV.saving(f).amount ? '<span class="save-line">Save ' + KV.fmt(KV.saving(f).amount) + '</span>' : '') + (KV.easyMonthly(f) ? '<span class="easy-line"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Easy Payment: <strong>' + KV.fmt(KV.easyMonthly(f)) + '</strong> x 12 months</span>' : '') + '<a class="button alt add_to_cart_button" href="?add-to-cart=' + esc(f.id) + '" data-kv-add="' + esc(f.id) + '">Add to cart</a></div></article>' + KV.grid(rest, { cols: 2, cls: 'deal-grid' }) + '</div>';
     } else {
-      h = head(r) + '<div class="kv-tabs" role="tablist" aria-label="' + esc(r.title) + '">' + r.tabs.map(function (t, i) { return '<button type="button" role="tab" class="kv-tab" aria-selected="' + (i === 0) + '" data-tab="' + i + '">' + esc(t.l) + '</button>'; }).join('') + '</div><div class="rail-panel" role="tabpanel">' + KV.grid(all.slice(0, 8), { cols: 4 }) + '</div>';
+      h = head(r) + '<div class="kv-tabs" role="tablist" aria-label="' + esc(r.title) + '">' + r.tabs.map(function (t, i) { return '<button type="button" role="tab" tabindex="' + (i ? '-1' : '0') + '" class="kv-tab" aria-selected="' + (i === 0) + '" data-tab="' + i + '">' + esc(t.l) + '</button>'; }).join('') + '</div><div class="rail-panel" role="tabpanel">' + KV.grid(all.slice(0, 8), { cols: 4 }) + '</div>';
     }
     return h;
   }
@@ -75,11 +77,44 @@
     var tab = e.target.closest('.kv-tab');
     if (tab && tab.closest('.rail')) {
       var host = tab.closest('.rail'), r = host.__r, i = +tab.getAttribute('data-tab'), f = r.tabs[i].f, list = r.list().filter(f || function () { return true; }).slice(0, 8);
-      $$('.kv-tab', host).forEach(function (b) { b.setAttribute('aria-selected', b === tab); });
+      $$('.kv-tab', host).forEach(function (b) { b.setAttribute('aria-selected', b === tab); b.tabIndex = b === tab ? 0 : -1; });
       $('.rail-panel', host).innerHTML = list.length ? KV.grid(list, { cols: 4 }) : '<p class="woocommerce-info">No products in this group yet.</p>'; KV.sync(); return;
     }
     var sc = e.target.closest('[data-scroll]');
     if (sc) { var tr = $('.rail-track', sc.closest('.rail')); tr.scrollBy({ left: +sc.getAttribute('data-scroll') * Math.max(280, tr.clientWidth * 0.8), behavior: 'smooth' }); }
+  });
+
+  d.addEventListener('keydown', function (e) {
+    var tab = e.target.closest('.rail .kv-tab'); if (!tab) return;
+    var tabs = $$('.kv-tab', tab.closest('.rail')), i = tabs.indexOf(tab), n = null;
+    if (e.key === 'ArrowRight') n = (i + 1) % tabs.length;
+    if (e.key === 'ArrowLeft') n = (i - 1 + tabs.length) % tabs.length;
+    if (e.key === 'Home') n = 0; if (e.key === 'End') n = tabs.length - 1;
+    if (n !== null) { e.preventDefault(); tabs[n].click(); tabs[n].focus(); }
+  });
+
+  /* Buying guides open complete, useful articles without leaving the store. */
+  var GUIDES = [
+    { title: 'How to choose an inverter fridge', cat: 'refrigerators', sections: [
+      ['Measure the space first', 'Check the available width, height and depth, plus the doorway and route into your kitchen. Leave the ventilation clearance specified by the manufacturer and enough room for the doors to open.'],
+      ['Choose capacity for your household', 'Compare usable capacity, freezer space and shelf layout with your shopping routine. Bring measurements of larger containers you use regularly.'],
+      ['Compare the running cost and cover', 'Check the model’s energy label and annual electricity use. Ask what the compressor warranty covers separately from the full appliance warranty, and whether delivery and installation are included.'] ] },
+    { title: 'Sofa fabric guide: what lasts in a Sri Lankan home', cat: 'furniture', sections: [
+      ['Start with everyday use', 'For a busy family room, ask about abrasion resistance, removable covers and the recommended cleaning method. Examine the frame, cushion support and stitching in the showroom.'],
+      ['Check fabric in real light', 'View a fabric sample in daylight and under your room lighting. Think about pets, young children, direct sunlight and how often you can maintain the upholstery.'],
+      ['Measure the room and delivery route', 'Record the sofa dimensions, door widths, stair turns and lift opening. Leave comfortable walking space and confirm whether delivery includes assembly or carrying upstairs.'] ] },
+    { title: 'AC size by room: what to check', cat: 'air-conditioners', sections: [
+      ['Room size is the starting point', 'Measure room length, width and ceiling height. Cooling needs also depend on sun exposure, roof insulation, windows, occupancy and heat-producing equipment.'],
+      ['Ask for a site assessment', 'Have a qualified installer confirm capacity and placement before buying. An oversized or undersized unit can affect comfort and efficiency; floor area alone is not enough.'],
+      ['Compare the installed price', 'Ask whether the quote includes pipe length, brackets, electrical work, drainage and commissioning. Check the model’s efficiency label, warranty conditions and maintenance requirements.'] ] }
+  ];
+  d.addEventListener('click', function (e) {
+    var a = e.target.closest('[data-guide]'); if (!a || !w.bootstrap) return; e.preventDefault();
+    var g = GUIDES[+a.dataset.guide], modal = $('#buying-guide-modal'); if (!g) return;
+    if (!modal) { modal = d.createElement('div'); modal.id = 'buying-guide-modal'; modal.className = 'modal fade'; modal.tabIndex = -1; modal.setAttribute('aria-labelledby', 'buying-guide-title'); modal.innerHTML = '<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"><article class="modal-content"><div class="modal-header"><h2 class="modal-title h4" id="buying-guide-title"></h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close buying guide"></button></div><div class="modal-body guide-copy"></div></article></div>'; d.body.appendChild(modal); }
+    $('#buying-guide-title', modal).textContent = g.title;
+    $('.modal-body', modal).innerHTML = '<p class="kv-eyebrow">Kavindu buying guide</p>' + g.sections.map(function (s) { return '<h3>' + esc(s[0]) + '</h3><p>' + esc(s[1]) + '</p>'; }).join('') + '<a class="button" href="shop.html?cat=' + g.cat + '">Browse ' + esc(KV.category(g.cat).name) + '</a>';
+    var instance = w.bootstrap.Modal.getOrCreateInstance(modal); modal.addEventListener('hidden.bs.modal', function () { a.focus(); }, { once: true }); instance.show();
   });
 
   /* ---------- Easy Payment calculator (band) ---------- */
@@ -89,7 +124,8 @@
     f.querySelector('.hc-tenures').innerHTML = KV.easy.tenures.map(function (t) { return '<button type="button" class="kv-chip" data-m="' + t.months + '" aria-pressed="' + (t.months === months) + '">' + t.months + ' mo</button>'; }).join('');
     function run() {
       var p = Math.max(KV.easy.minPrice, parseInt(String(price.value).replace(/\D/g, ''), 10) || 0), c = KV.calc(p, +down.value, months);
-      out.innerHTML = '<span class="hc-monthly">' + KV.fmt(c.monthly) + '<small> / month x ' + months + '</small></span><span class="hc-line">Down payment ' + KV.fmt(c.down) + '</span><span class="hc-line">Total payable ' + KV.fmt(c.total) + '</span>';
+      var apply = f.querySelector('a'); if (apply) apply.href = 'easy-payment.html?price=' + p + '&months=' + months + '&down=' + down.value;
+      out.innerHTML = '<span class="hc-monthly">' + KV.fmt(c.monthly) + '<small> / month x ' + months + '</small></span><span class="hc-line">Down payment ' + KV.fmt(c.down) + '</span><span class="hc-line">Total payable ' + KV.fmt(c.total) + '</span>' + KV.planNote(c);
     }
     f.addEventListener('click', function (e) { var b = e.target.closest('[data-m]'); if (!b) return; months = +b.getAttribute('data-m'); $$('[data-m]', f).forEach(function (x) { x.setAttribute('aria-pressed', x === b); }); run(); });
     f.addEventListener('input', run); f.addEventListener('submit', function (e) { e.preventDefault(); });

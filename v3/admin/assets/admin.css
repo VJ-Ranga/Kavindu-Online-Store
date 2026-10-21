@@ -268,3 +268,13 @@ body.folded #collapse-button i{transform:rotate(180deg)}
  .button{min-height:40px;line-height:2.8}
  .button-small{min-height:32px;line-height:2.4}
 }
+
+/* Mobile filters wrap within the page; only data tables scroll horizontally. */
+.tablenav .actions { flex-wrap: wrap; min-width: 0; max-width: 100%; }
+.tablenav .actions select { max-width: 100%; min-width: 0; }
+.table-wrap { position: relative; max-width: 100%; min-width: 0; }
+@media (max-width: 600px) {
+  .tablenav .actions { width: 100%; }
+  .tablenav .actions select { flex: 1 1 140px; }
+  #wpbody-content { min-width: 0; }
+}

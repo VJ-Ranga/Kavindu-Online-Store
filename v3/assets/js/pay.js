@@ -17,6 +17,7 @@
   function rnd(n) { var s = ''; while (s.length < n) s += Math.floor(Math.random() * 10); return s; }
 
   function finish(ref) {
+    if (!order && qs.get('ref') === 'EP-2026-0417' && +qs.get('instalment')) { try { localStorage.setItem('kv-plan-paid', String(Math.max(+load('kv-plan-paid', 3), +qs.get('instalment')))); } catch (e) {} }
     if (order) {
       var all = load('kv-orders', []);
       all.forEach(function (o) { if (o.number === order.number) { o.status = 'processing'; o.pay = { ref: ref, at: new Date().toISOString(), via: gw }; } });
@@ -46,8 +47,8 @@
   function checkCard(prefix) {
     var ok = true, v = function (i) { return d.getElementById(prefix + i).value.trim(); }, digits = v('num').replace(/\s/g, '');
     var m = /^(\d{2})\/(\d{2})$/.exec(v('exp'));
-    err(prefix + 'num', digits.length < 13 || digits.length > 19 ? 'Enter a valid card number.' : ''); if (digits.length < 13) ok = false;
-    var expOk = m && +m[1] >= 1 && +m[1] <= 12; err(prefix + 'exp', expOk ? '' : 'Enter the expiry as MM/YY.'); if (!expOk) ok = false;
+    err(prefix + 'num', digits.length < 13 || digits.length > 19 || !/^\d+$/.test(digits) ? 'Enter a valid card number.' : ''); if (digits.length < 13 || digits.length > 19 || !/^\d+$/.test(digits)) ok = false;
+    var today = new Date(), expOk = m && +m[1] >= 1 && +m[1] <= 12 && (2000 + +m[2] > today.getFullYear() || (2000 + +m[2] === today.getFullYear() && +m[1] >= today.getMonth() + 1)); err(prefix + 'exp', expOk ? '' : 'Enter a current expiry date as MM/YY.'); if (!expOk) ok = false;
     var cvOk = /^\d{3,4}$/.test(v('cvv')); err(prefix + 'cvv', cvOk ? '' : 'Enter the 3 or 4 digit code.'); if (!cvOk) ok = false;
     var nmOk = v('name').length > 1; err(prefix + 'name', nmOk ? '' : 'Enter the name shown on the card.'); if (!nmOk) ok = false;
     if (!ok) { var bad = root.querySelector('[aria-invalid="true"]'); if (bad) bad.focus(); }

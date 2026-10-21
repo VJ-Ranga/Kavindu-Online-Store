@@ -15,6 +15,7 @@
   function easyM(p) { return KV.easyMonthly(p) || 0; }
   function matches(p, skip) {
     if (skip !== 'cat' && S.cat && p.category !== S.cat) return false;
+    if (S.sort === 'deals' && !(p.rrp > p.price)) return false;
     if (S.q) { var hay = (p.name + ' ' + p.brand + ' ' + p.model + ' ' + p.category + ' ' + p.keySpec).toLowerCase(); if (S.q.toLowerCase().split(/\s+/).some(function (t) { return hay.indexOf(t) < 0; })) return false; }
     if (skip !== 'brand' && S.brands.length && S.brands.indexOf(p.brand) < 0) return false;
     if (S.min !== '' && p.price < +S.min) return false;
@@ -26,12 +27,13 @@
   }
   function sorted(list) {
     var l = list.slice();
-    var f = { popularity: function (a, b) { return b.reviews - a.reviews; }, rating: function (a, b) { return b.rating - a.rating || b.reviews - a.reviews; },
+    var f = { deals: function (a, b) { return KV.saving(b).pct - KV.saving(a).pct; }, popularity: function (a, b) { return b.reviews - a.reviews; }, rating: function (a, b) { return b.rating - a.rating || b.reviews - a.reviews; },
       date: function (a, b) { return idx[b.id] - idx[a.id]; }, price: function (a, b) { return a.price - b.price; }, 'price-desc': function (a, b) { return b.price - a.price; } }[S.sort];
     return f ? l.sort(f) : l;
   }
   function url(over) {
     var s = Object.assign({}, S, over || {}), p = new URLSearchParams();
+    if (qs.get('opt')) p.set('opt', Object.keys(KV.options.get()).map(function (k) { return k + '-' + KV.options.get()[k]; }).join(','));
     if (s.cat) p.set('cat', s.cat); if (s.q) p.set('q', s.q); if (s.sort !== 'menu_order') p.set('sort', s.sort);
     s.brands.forEach(function (b) { p.append('brand', b); });
     ['min', 'max', 'easy', 'rating'].forEach(function (k) { if (s[k] !== '') p.set(k, s[k]); });
@@ -63,20 +65,22 @@
   function heading() {
     var c = S.cat && KV.category(S.cat), crumb = '<a href="index.html">Home</a>&nbsp;/&nbsp;' + (c || S.q ? '<a href="shop.html">Shop</a>&nbsp;/&nbsp;' : 'Shop') + (c ? esc(c.name) : S.q ? 'Search results' : '');
     $('#shop-crumb').innerHTML = crumb;
-    var t = c ? c.name : S.q ? 'Search results for "' + S.q + '"' : 'All products';
+    var t = c ? c.name : S.sort === 'deals' ? 'Deals and offers' : S.q ? 'Search results for "' + S.q + '"' : 'All products';
     $('#shop-title').textContent = t; d.title = t + ' | Kavindu Online Store';
     $('#shop-desc').textContent = c ? (c.subs && c.subs.length ? 'Including ' + c.subs.join(', ').toLowerCase() + '. Delivery island-wide, Easy Payment available on orders over Rs 15,000.' : 'Delivery island-wide. Easy Payment available on orders over Rs 15,000.') : S.q ? '' : 'Furniture, home appliances, TVs, laptops and phones. Delivery island-wide, with Easy Payment monthly plans on orders over Rs 15,000.';
   }
   function chips(total) {
     var a = [];
-    function chip(label, over) { a.push('<a class="kv-chip on" href="' + url(Object.assign({ page: 1 }, over)) + '" data-clear=\'' + JSON.stringify(over) + '\'>' + esc(label) + ' <i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="screen-reader-text"> remove filter</span></a>'); }
+    function chip(label, over) { a.push('<a class="kv-chip on" href="' + url(Object.assign({ page: 1 }, over)) + '" data-clear=\'' + esc(JSON.stringify(over)) + '\'>' + esc(label) + ' <i class="fa-solid fa-xmark" aria-hidden="true"></i><span class="screen-reader-text"> remove filter</span></a>'); }
+    if (S.cat) chip(KV.category(S.cat) ? KV.category(S.cat).name : S.cat, { cat: '' });
+    if (S.sort === 'deals') chip('Sale items', { sort: 'menu_order' });
     if (S.q) chip('Search: ' + S.q, { q: '' });
     S.brands.forEach(function (b) { chip(b, { brands: S.brands.filter(function (x) { return x !== b; }) }); });
     if (S.min !== '' || S.max !== '') chip('Rs ' + (S.min || 0) + ' - ' + (S.max || 'any'), { min: '', max: '' });
     if (S.easy) chip('Up to ' + KV.fmt(+S.easy) + '/month', { easy: '' });
     if (S.stock) chip('In stock', { stock: false });
     if (S.rating) chip(S.rating + ' stars +', { rating: '' });
-    $('#active-filters').innerHTML = a.length ? a.join('') + '<a class="clear-all" href="' + url({ page: 1, q: S.q, brands: [], min: '', max: '', easy: '', stock: false, rating: '' }) + '" data-clear=\'{"brands":[],"min":"","max":"","easy":"","stock":false,"rating":""}\'>Clear all</a>' : '';
+    $('#active-filters').innerHTML = a.length ? a.join('') + '<a class="clear-all" href="' + url({ page: 1, cat: '', q: '', sort: 'menu_order', brands: [], min: '', max: '', easy: '', stock: false, rating: '' }) + '" data-clear=\'{"cat":"","q":"","sort":"menu_order","brands":[],"min":"","max":"","easy":"","stock":false,"rating":""}\'>Clear all</a>' : '';
     var n = a.length; var b = $('#filter-n'); b.hidden = !n; b.textContent = n;
   }
   function render() {
@@ -130,6 +134,6 @@
     var a = e.target.closest('[data-page]'); if (!a) return; e.preventDefault(); S.page = +a.dataset.page; render();
     var t = $('.shop-toolbar'); t && t.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   });
-  w.addEventListener('kv:options', function (e) { if (e.detail && e.detail.key === 'card') render(); });
+  w.addEventListener('kv:options', function (e) { if (e.detail && (e.detail.key === 'card' || e.detail.key === 'all')) render(); });
   KV.ready(function () { refresh(); });
 })(window, document);

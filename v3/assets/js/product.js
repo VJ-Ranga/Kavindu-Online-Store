@@ -38,8 +38,8 @@
     var tenures = E.tenures.map(function (t) { return '<button type="button" class="kv-chip' + (t.months === st.months ? ' on' : '') + '" aria-pressed="' + (t.months === st.months) + '" data-m="' + t.months + '">' + t.months + ' months</button>'; }).join('');
     var downs = [20, 25, 30, 40, 50].filter(function (v) { return v >= E.minDownPct; }).map(function (v) { return '<option value="' + v + '"' + (v === st.down ? ' selected' : '') + '>' + v + '% (' + KV.fmt(P * v / 100) + ')</option>'; }).join('');
     var easy = easyOk ? '<div class="ep-controls"><div><label for="ep-down">Down payment</label><select id="ep-down">' + downs + '</select></div></div><span class="small fw-medium d-block" id="ep-lbl">Choose number of months</span><div class="ep-tenures" role="group" aria-labelledby="ep-lbl">' + tenures + '</div><div class="ep-out" id="ep-out" aria-live="polite"></div><div class="ep-actions"><a class="btn-kv btn-kv-easy" id="ep-apply" href="easy-payment.html">Apply for Easy Payment</a><a class="ep-link" href="easy-payment.html">How it works</a></div><p class="ep-note">Indicative figures. Subject to approval; final plan is confirmed by our team.</p>' : '<p class="ep-note">Easy Payment is available on items over ' + KV.fmt(E.minPrice) + '.</p>';
-    var banks = '<ul class="bank-plans">' + [3, 6, 12].map(function (mo) { return '<li><strong>' + KV.fmt(Math.ceil(P / mo)) + '</strong> x ' + mo + ' months<span>0% interest</span></li>'; }).join('') + '</ul><p class="ep-note">Available on selected credit cards' + (D.banks && D.banks.length ? ' from ' + esc(D.banks.slice(0, 4).join(', ')) + ' and more' : '') + '. Select "Bank card instalments" at checkout. Powered by PayHere.</p>';
-    var bnpl = '<p class="bnpl-line">Pay in 3 equal parts of <strong>' + KV.fmt(t3) + '</strong>. First part today, the rest every 2 weeks, no interest.</p><ul class="pay-logos"><li><img src="assets/img/payments/koko.png" alt="Koko" height="24"></li><li class="pay-dark"><img src="assets/img/payments/mintpay-small.png" alt="Mintpay" height="22"></li></ul><p class="ep-note">Choose Koko or Mintpay at checkout. Approval is instant with a debit or credit card.</p>';
+    var banks = '<ul class="bank-plans">' + [3, 6, 12].map(function (mo) { return '<li><strong>' + KV.fmt(Math.ceil(P / mo)) + '</strong> x ' + mo + ' months<span>0% interest</span></li>'; }).join('') + '</ul><p class="ep-note">Available on selected credit cards' + (D.banks && D.banks.length ? ' from ' + esc(D.banks.slice(0, 4).map(function (b) { return b.name; }).join(', ')) + ' and more' : '') + '. Select "Bank card instalments" at checkout. Powered by PayHere.</p>';
+    var bnpl = '<p class="bnpl-line">Pay in 3 equal parts of <strong>' + KV.fmt(t3) + '</strong>. First payment today; later payment dates and eligibility are confirmed by the provider.</p><ul class="pay-logos"><li><img src="assets/img/payments/koko.png" alt="Koko" height="24"></li><li class="pay-dark"><img src="assets/img/payments/mintpay-small.png" alt="Mintpay" height="22"></li></ul><p class="ep-note">Choose Koko or Mintpay at checkout. Provider approval and purchase limits apply. The exact schedule is shown before you confirm.</p>';
     return '<section class="pay-options" aria-labelledby="po-h"><h2 id="po-h">Payment options</h2>' +
       opt('full', '<span class="pay-logo-txt">' + KV.fmt(P) + '</span>', 'Pay in full', 'Card, cash on delivery or bank transfer', '<p class="ep-note" style="margin:0">Pay ' + KV.fmt(P) + ' by card or wallet via PayHere, bank transfer, or cash when delivered.</p><ul class="pay-logos mt-2"><li><img src="assets/img/payments/payhere.png" alt="PayHere" height="24"></li><li><i class="fa-brands fa-cc-visa" aria-label="Visa"></i></li><li><i class="fa-brands fa-cc-mastercard" aria-label="Mastercard"></i></li><li><i class="fa-brands fa-cc-amex" aria-label="American Express"></i></li></ul>') +
       opt('easy', '<span class="pay-badge-easy">Easy Payment</span>', 'Monthly instalments' + (easyOk ? ' from <span id="ep-from"></span>' : ''), 'Our own plan, 6 to 36 months', easy, !easyOk) +
@@ -119,7 +119,7 @@
     if (!easyOk) return;
     var c = KV.calc(p.price, st.down, st.months);
     $$('.ep-tenures .kv-chip').forEach(function (b) { var on = +b.dataset.m === st.months; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
-    $('#ep-out').innerHTML = '<div class="ep-big"><strong>' + KV.fmt(c.monthly) + '</strong> <span>x ' + c.months + ' months</span></div><dl><div><dt>Down payment today</dt><dd>' + KV.fmt(c.down) + '</dd></div><div><dt>Amount financed</dt><dd>' + KV.fmt(c.financed) + '</dd></div><div><dt>Plan cost (' + c.markupPct + '%)</dt><dd>' + KV.fmt(c.extra) + '</dd></div><div class="tot"><dt>Total payable</dt><dd>' + KV.fmt(c.total) + '</dd></div></dl>';
+    $('#ep-out').innerHTML = '<div class="ep-big"><strong>' + KV.fmt(c.monthly) + '</strong> <span>x ' + c.months + ' months</span></div><dl><div><dt>Down payment today</dt><dd>' + KV.fmt(c.down) + '</dd></div><div><dt>Amount financed</dt><dd>' + KV.fmt(c.financed) + '</dd></div><div><dt>Plan cost (' + c.markupPct + '%)</dt><dd>' + KV.fmt(c.extra) + '</dd></div><div class="tot"><dt>Total payable</dt><dd>' + KV.fmt(c.total) + '</dd></div></dl>' + KV.planNote(c);
     $('#ep-apply').href = 'easy-payment.html?product=' + encodeURIComponent(p.id) + '&months=' + c.months + '&down=' + st.down;
   }
   if (easyOk) {
@@ -143,7 +143,7 @@
   }
   tabs.forEach(function (a, i) {
     a.addEventListener('click', function (e) { e.preventDefault(); openTab(a); });
-    a.addEventListener('keydown', function (e) { var n = e.key === 'ArrowRight' ? i + 1 : e.key === 'ArrowLeft' ? i - 1 : -1; if (n >= 0) { e.preventDefault(); openTab(tabs[(n + tabs.length) % tabs.length], true); } });
+    a.addEventListener('keydown', function (e) { var n = e.key === 'ArrowRight' ? (i + 1) % tabs.length : e.key === 'ArrowLeft' ? (i - 1 + tabs.length) % tabs.length : e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : -1; if (n >= 0) { e.preventDefault(); openTab(tabs[(n + tabs.length) % tabs.length], true); } });
   });
   $('#rev-link').addEventListener('click', function (e) { e.preventDefault(); openTab(d.getElementById('tab-title-reviews')); $('.woocommerce-tabs').scrollIntoView({ behavior: 'smooth' }); });
 
@@ -152,6 +152,6 @@
   if ('IntersectionObserver' in w) {
     new IntersectionObserver(function (en) { var show = !en[0].isIntersecting && en[0].boundingClientRect.top < 0; bar.classList.toggle('show', show); bar.setAttribute('aria-hidden', !show); $('button', bar).tabIndex = show ? 0 : -1; }).observe($('#pd-form'));
   }
-  w.addEventListener('kv:options', function (e) { if (e.detail && e.detail.key === 'card') { $$('section.related').forEach(function (s, i) { var l = i ? rvShow : related(); $('ul.products', s).outerHTML = KV.grid(l, { cols: 4 }); }); KV.sync && KV.sync(); } });
+  w.addEventListener('kv:options', function (e) { if (e.detail && (e.detail.key === 'card' || e.detail.key === 'all')) { $$('section.related').forEach(function (s, i) { var l = i ? rvShow : related(); $('ul.products', s).outerHTML = KV.grid(l, { cols: 4 }); }); KV.sync && KV.sync(); } });
   KV.ready(function () { KV.sync && KV.sync(); });
 })(window, document);

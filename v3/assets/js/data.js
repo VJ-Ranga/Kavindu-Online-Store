@@ -1,7 +1,7 @@
 /* Kavindu Online Store - catalogue + config. window.KV_DATA (see theme.js header for shape). */
 (function (w) {
   'use strict';
-  var U = function (id, wd) { return 'https://images.unsplash.com/' + id + '?auto=format&fit=crop&w=' + (wd || 900) + '&q=80'; };
+  var U = function (id, wd) { return 'https://images.unsplash.com/' + id + '?auto=format&fit=crop&w=' + (wd || 600) + '&q=80'; };
   var S3 = 'https://nextcominnovex.s3.ap-south-1.amazonaws.com/';
   var SG = 'https://singerwebcdn.azureedge.net/resources/products/max/';
   var I = {
@@ -87,6 +87,8 @@
     ]
   };
 
+
+  categories.forEach(function (c) { c.count = products.filter(function (p) { return p.category === c.id; }).length; });
 
   w.KV_DATA = {
     brand: { name: 'Kavindu Online Store', company: 'Kavindu Enterprises (Pvt) Ltd', hotline: '011 234 5678', hotlineTel: '+94112345678', whatsapp: '94771234567', whatsappDisplay: '077 123 4567', email: 'hello@kavindustore.lk', address: 'No. 45, Main Street, Avissawella', hours: 'Mon-Sat 9:00 AM - 7:00 PM, Sun 10:00 AM - 5:00 PM', logo: 'assets/img/logo.svg', logoWhite: 'assets/img/logo-white.svg' },

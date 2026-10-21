@@ -80,7 +80,7 @@
     if (!COUPONS[code]) { notice('Coupon &ldquo;' + KV.esc(code.toLowerCase()) + '&rdquo; does not exist!', 'error'); return; }
     KV.save('kv-coupon', code); render(); notice('Coupon code applied successfully.', 'message');
   });
-  w.addEventListener('kv:cart', function (e) { if (!e.detail || e.detail.action !== 'add') render(); });
+  w.addEventListener('kv:cart', function (e) { render(); });
   KV.ready(function () {
     if (qs.get('sample') === '1' && !KV.cart.count()) {
       ['innovex-no-frost-inverter-fridge-250l', 'panasonic-25l-microwave', 'philips-blender-15l'].forEach(function (id, n) { KV.cart.add(id, n === 2 ? 2 : 1, { silent: true }); });
