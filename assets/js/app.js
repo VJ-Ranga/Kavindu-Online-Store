@@ -71,15 +71,26 @@
     write('cm-cart', cart); updateCounts(); openDrawer();
   };
 
+  /* Simple real-shop card: whole card clickable, image, name, price, offer + timer, favourite, add to cart */
+  CM.saleEnds = p => { if (!p.was) return 0; let h = 0; for (const ch of p.id) h = (h * 31 + ch.charCodeAt(0)) >>> 0; const t = new Date(); t.setHours(23, 59, 0, 0); return t.getTime() + (h % 5) * 86400000; };
+  CM.endsText = ms => { const left = ms - Date.now(); if (left <= 0) return 'Offer ended'; const d = Math.floor(left / 864e5), h = Math.floor(left % 864e5 / 36e5), m = Math.floor(left % 36e5 / 6e4); return `Offer ends in ${d ? d + 'd ' : ''}${h}h ${String(m).padStart(2, '0')}m`; };
   CM.productCard = p => {
     const discount = p.was ? Math.round((1 - p.price / p.was) * 100) : 0;
-    const badges = (p.badges || []).map(b => `<span class="badge-cm ${b.toLowerCase().includes('easy') ? 'badge-payment' : b.toLowerCase().includes('new') ? 'badge-new' : 'badge-sale'}">${b}</span>`).join('');
-    const furniture = String(p.images[0]).includes('photo-');
-    return `<article class="cm-card cm-product-card" data-product-id="${p.id}">
-      <div class="cm-product-image ${furniture ? 'is-furniture' : ''}"><a href="product.html?id=${encodeURIComponent(p.id)}" aria-label="View ${p.name}"><img src="${p.images[0]}" alt="${p.name}" loading="lazy"></a><div class="cm-product-badges">${p.was ? `<span class="badge-cm badge-sale">-${discount}%</span>` : ''}${badges}</div><div class="cm-product-actions"><button class="cm-icon-btn" type="button" data-wishlist="${p.id}" aria-label="Save ${p.name}"><i class="fa-regular fa-heart"></i></button><button class="cm-icon-btn" type="button" data-compare="${p.id}" aria-label="Compare ${p.name}"><i class="fa-solid fa-code-compare"></i></button></div></div>
-      <div class="cm-product-body"><span class="cm-product-brand">${p.brand}</span><a class="cm-product-name" href="product.html?id=${encodeURIComponent(p.id)}">${p.name}</a><div class="cm-product-rating"><i class="fa-solid fa-star"></i> ${p.rating} <span>(${p.reviews})</span></div><div class="cm-product-price"><span class="price-cash">${CM.fmt(p.price)}</span>${p.was ? `<span class="price-was">${CM.fmt(p.was)}</span>` : ''}</div><span class="price-monthly">or ${CM.fmt(CM.fromMonthly(p.price))}/mo × ${Math.max(...CM.easyPayment.tenures.map(t => t.months))} · Easy Payment</span><div class="cm-product-foot"><button class="btn-cm btn-cm-outline btn-cm-sm" type="button" data-add-cart="${p.id}"><i class="fa-solid fa-bag-shopping"></i> Add to cart</button></div></div>
+    const ends = CM.saleEnds(p);
+    const url = `product.html?id=${encodeURIComponent(p.id)}`;
+    return `<article class="cm-card cm-product-card kv-simple-card" data-product-id="${p.id}">
+      <div class="ks-media"><img src="${p.images[0]}" alt="${p.name}" loading="lazy" decoding="async">
+        ${p.was ? `<span class="ks-badge">-${discount}%</span>` : ''}
+        <button class="ks-wish" type="button" data-wishlist="${p.id}" aria-label="Add ${p.name} to favourites"><i class="fa-regular fa-heart"></i></button></div>
+      <span class="ks-brand">${p.brand}</span>
+      <h3 class="ks-title"><a class="ks-link" href="${url}">${p.name}</a></h3>
+      <div class="ks-price"><span class="ks-now ${p.was ? 'is-sale' : ''}">${CM.fmt(p.price)}</span>${p.was ? `<del class="ks-was">${CM.fmt(p.was)}</del>` : ''}</div>
+      ${ends ? `<span class="ks-offer" data-ends="${ends}"><i class="fa-regular fa-clock"></i> <span>${CM.endsText(ends)}</span></span>` : ''}
+      <button class="ks-add btn-cm btn-cm-primary" type="button" data-add-cart="${p.id}">Add to cart</button>
     </article>`;
   };
+  setInterval(() => document.querySelectorAll('.ks-offer[data-ends]').forEach(el => { el.querySelector('span').textContent = CM.endsText(+el.dataset.ends); }), 30000);
+
 
   const header = () => {
     const links = [['refrigerators', 'Refrigerators'], ['washing-machines', 'Washing Machines'], ['tv-audio', 'TV & Audio'], ['air-conditioners', 'Air Conditioners'], ['kitchen-appliances', 'Kitchen Appliances'], ['furniture', 'Furniture'], ['laptops-phones', 'Laptops & Phones']];

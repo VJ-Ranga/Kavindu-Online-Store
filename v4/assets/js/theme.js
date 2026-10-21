@@ -218,23 +218,40 @@
       '<button type="button" class="act-btn" data-kv-compare="' + esc(p.id) + '" aria-pressed="false" aria-label="Compare ' + esc(p.name) + '"><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i></button>' +
       '<button type="button" class="act-btn" data-kv-quick="' + esc(p.id) + '" aria-label="Quick view ' + esc(p.name) + '"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>';
   }
+  /* Offer timeline: p.saleEnds (ISO date) or a demo end date 1–5 days ahead for sale items */
+  KV.saleEnds = function (p) {
+    if (!(p.rrp && p.rrp > p.price)) return 0;
+    if (p.saleEnds) return new Date(p.saleEnds).getTime();
+    var h = 0; for (var i = 0; i < p.id.length; i++) h = (h * 31 + p.id.charCodeAt(i)) >>> 0;
+    var t = new Date(); t.setHours(23, 59, 0, 0); return t.getTime() + (h % 5) * 86400000;
+  };
+  function endsText(ms) {
+    var left = ms - Date.now(); if (left <= 0) return 'Offer ended';
+    var dd = Math.floor(left / 86400000), hh = Math.floor(left % 86400000 / 3600000), mm = Math.floor(left % 3600000 / 60000);
+    return 'Offer ends in ' + (dd ? dd + 'd ' : '') + hh + 'h ' + (mm < 10 ? '0' : '') + mm + 'm';
+  }
+  function offerLine(p) { var e = KV.saleEnds(p); return e ? '<span class="kv-offer" data-kv-ends="' + e + '"><i class="fa-regular fa-clock" aria-hidden="true"></i> <span>' + endsText(e) + '</span></span>' : ''; }
+  setInterval(function () { $$('[data-kv-ends]').forEach(function (el) { var s = el.querySelector('span'); if (s) s.textContent = endsText(+el.getAttribute('data-kv-ends')); }); }, 30000);
   KV.card = function (p, o) {
     var opt = (o && o.opt) || d.body.getAttribute('data-card') || '1', url = KV.url(p);
     if (opt === '2') {
       return '<li class="' + liClass(p, 'card-2') + '" data-id="' + esc(p.id) + '"><div class="product-inner"><div class="product-media"><a href="' + url + '" class="woocommerce-LoopProduct-link woocommerce-loop-product__link" tabindex="-1" aria-hidden="true">' + img(p) + '</a>' + badges(p) +
         '<div class="product-actions">' + actionBtns(p) + '</div>' + addBtn(p, 'card-add-bar') + '</div><div class="product-info"><span class="product-brand">' + esc(p.brand) + '</span><h2 class="woocommerce-loop-product__title"><a href="' + url + '">' + esc(p.name) + '</a></h2>' +
-        '<div class="rating-row">' + KV.stars(p.rating, p.reviews) + '</div>' + KV.priceBlock(p) + '</div></div></li>';
+        '<div class="rating-row">' + KV.stars(p.rating, p.reviews) + '</div>' + KV.priceBlock(p) + offerLine(p) + '</div></div></li>';
     }
     if (opt === '3') {
       var bl = (p.bullets || []).slice(0, 3).map(function (b) { return '<li>' + esc(b) + '</li>'; }).join('');
       return '<li class="' + liClass(p, 'card-3') + '" data-id="' + esc(p.id) + '"><div class="product-inner"><div class="product-media"><a href="' + url + '" class="woocommerce-LoopProduct-link woocommerce-loop-product__link">' + img(p) + '</a>' + badges(p) + '</div>' +
         '<div class="product-main"><span class="product-brand">' + esc(p.brand) + ' &middot; ' + esc(p.model) + '</span><h2 class="woocommerce-loop-product__title"><a href="' + url + '">' + esc(p.name) + '</a></h2><ul class="product-bullets">' + bl + '</ul><div class="rating-row">' + KV.stars(p.rating, p.reviews) + '</div></div>' +
-        '<div class="product-buy">' + KV.priceBlock(p) + saveLine(p) + easyLine(p) + '<span class="delivery-line"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i> ' + esc(p.delivery || (p.price >= D.shipping.freeOver ? 'Free delivery' : 'Delivery ' + KV.fmt(D.shipping.flat))) + '</span>' + stockLine(p) + addBtn(p) +
+        '<div class="product-buy">' + KV.priceBlock(p) + offerLine(p) + '<span class="delivery-line"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i> ' + esc(p.delivery || (p.price >= D.shipping.freeOver ? 'Free delivery' : 'Delivery ' + KV.fmt(D.shipping.flat))) + '</span>' + addBtn(p) +
         '<span class="buy-links"><button type="button" class="link-btn" data-kv-wish="' + esc(p.id) + '" aria-pressed="false"><i class="fa-regular fa-heart" aria-hidden="true"></i> Wishlist</button><button type="button" class="link-btn" data-kv-compare="' + esc(p.id) + '" aria-pressed="false"><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i> Compare</button></span></div></div></li>';
     }
-    return '<li class="' + liClass(p, 'card-1') + '" data-id="' + esc(p.id) + '"><div class="product-inner"><a href="' + url + '" class="woocommerce-LoopProduct-link woocommerce-loop-product__link">' + badges(p) + '<div class="product-media">' + img(p) + '</div>' +
-      '<span class="product-brand">' + esc(p.brand) + '</span><h2 class="woocommerce-loop-product__title">' + esc(p.name) + '</h2><p class="product-keyspec">' + esc(p.keySpec) + '</p><div class="rating-row">' + KV.stars(p.rating, p.reviews) + '</div>' +
-      KV.priceBlock(p) + saveLine(p) + easyLine(p) + stockLine(p) + '</a>' + addBtn(p) + '</div></li>';
+    /* Card 1 — simple real-shop card: whole card clickable (stretched link), image, name, price, offer + timer, wishlist, add to cart */
+    return '<li class="' + liClass(p, 'card-1') + '" data-id="' + esc(p.id) + '"><div class="product-inner kv-card">' +
+      '<div class="product-media">' + img(p) + badges(p) + '<button type="button" class="kv-wish" data-kv-wish="' + esc(p.id) + '" aria-pressed="false" aria-label="Add ' + esc(p.name) + ' to favourites"><i class="fa-regular fa-heart" aria-hidden="true"></i></button></div>' +
+      '<span class="product-brand">' + esc(p.brand) + '</span>' +
+      '<h2 class="woocommerce-loop-product__title"><a href="' + url + '" class="woocommerce-LoopProduct-link woocommerce-loop-product__link kv-stretch">' + esc(p.name) + '</a></h2>' +
+      KV.priceBlock(p) + offerLine(p) + addBtn(p) + '</div></li>';
   };
   KV.grid = function (list, o) { return '<ul class="products columns-' + ((o && o.cols) || 4) + (o && o.cls ? ' ' + o.cls : '') + '">' + list.map(function (p) { return KV.card(p, o); }).join('') + '</ul>'; };
   KV.sync = function () {
