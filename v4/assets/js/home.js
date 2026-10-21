@@ -20,7 +20,11 @@
   function hero() {
     var o = d.body.getAttribute('data-hero') || '1', B = KV.banners(), slides = (B.heroSlides || []).filter(function (b) { return b && b.visible !== false; }), h;
     var slider = slides.length ? '<div class="kv-slider hero-slider"><div class="kv-slides">' + slides.map(slide).join('') + '</div></div>' : '';
-    if (o === '2') h = '<div class="container hero-full-wrap">' + slider + '</div>';
+    if (o === '2') {
+      /* Full-width carousel: uses the 1920 x 600 "wide" image of each slide (falls back to the normal image) */
+      var wide = slides.map(function (b, i) { var w = { img: b.imgWide || b.img, imgMobile: b.imgMobile, link: b.link, alt: b.alt }; return '<div class="kv-slide">' + bannerLink(w, '', i === 0, [1920, 600, '1920 × 600 px']) + '</div>'; }).join('');
+      h = '<div class="hero-fullbleed"><div class="kv-slider hero-slider hero-slider-wide"><div class="kv-slides">' + wide + '</div></div></div>';
+    }
     else if (o === '3') h = '<div class="container"><div class="hero3-grid"><nav class="hero-catlist" aria-label="Shop by category"><h2>Shop by category</h2><ul>' + D.categories.map(function (c) { return '<li><a href="shop.html?cat=' + c.id + '"><i class="' + c.icon + '" aria-hidden="true"></i><span>' + esc(c.name) + '</span><i class="fa-solid fa-chevron-right chev" aria-hidden="true"></i></a></li>'; }).join('') + '</ul></nav>' + slider + '</div></div>';
     else { var side = (B.heroSide || []).filter(function (b) { return b && b.visible !== false; }); h = '<div class="container"><div class="hero1-grid">' + slider + (side.length ? '<div class="hero-side">' + side.map(function (b) { return bannerLink(b, 'side-banner', false, [640, 252, '640 × 252 px']); }).join('') + '</div>' : '') + '</div></div>'; }
     var host = $('#home-hero'); host.className = 'hero hero-' + o; host.innerHTML = h;

@@ -14,7 +14,7 @@
     var o = d.body.getAttribute('data-hero') || '1', B = D.banners, h;
     if (o === '2') {
       var s = B.slides[1];
-      h = '<div class="hero-full-img"><div class="kv-slider hero-slider"><div class="kv-slides">' + B.slides.map(slide).join('') + '</div></div></div>' +
+      h = '<div class="hero-fullbleed"><div class="kv-slider hero-slider hero-slider-wide"><div class="kv-slides">' + B.slides.map(function (b, i) { return slide({ img: b.imgWide || b.img, imgMobile: b.imgMobile, link: b.link, alt: b.alt }, i); }).join('') + '</div></div></div>' +
         '<div class="container"><ul class="service-tiles"><li><i class="fa-solid fa-truck-fast" aria-hidden="true"></i><span><strong>Free delivery</strong>Colombo, orders over Rs 50,000</span></li><li><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span><strong>Warranty</strong>Genuine manufacturer cover</span></li><li><i class="fa-solid fa-calendar-check" aria-hidden="true"></i><span><strong>Easy Payment</strong>6 to 36 monthly instalments</span></li><li><i class="fa-solid fa-store" aria-hidden="true"></i><span><strong>6 showrooms</strong>Visit and test in store</span></li></ul></div>';
     } else if (o === '3') {
       h = '<div class="container"><div class="hero3-grid"><nav class="hero-catlist" aria-label="Shop by category"><h2>Shop by category</h2><ul>' + D.categories.map(function (c) { return '<li><a href="shop.html?cat=' + c.id + '"><i class="' + c.icon + '" aria-hidden="true"></i><span>' + esc(c.name) + '</span><i class="fa-solid fa-chevron-right chev" aria-hidden="true"></i></a></li>'; }).join('') + '</ul></nav><div class="kv-slider hero-slider h480"><div class="kv-slides">' + B.slides.map(slide).join('') + '</div></div></div></div>';

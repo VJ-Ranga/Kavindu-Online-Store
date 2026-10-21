@@ -72,9 +72,9 @@
   /* Image-only banner slots: staff upload a designed image (text/price baked in) + link. Desktop + optional mobile image. */
   var banners = {
     slides: [
-      { img: 'assets/img/banners/hero-1.webp', imgMobile: 'assets/img/banners/hero-1-m.webp', link: 'shop.html?cat=refrigerators', alt: 'Inverter refrigerators from Rs 131,900' },
-      { img: 'assets/img/banners/hero-2.webp', imgMobile: 'assets/img/banners/hero-2-m.webp', link: 'product.html?id=innovex-65-4k-google-qled-tv', alt: '65 inch QLED Google TV now Rs 299,900' },
-      { img: 'assets/img/banners/hero-3.webp', imgMobile: 'assets/img/banners/hero-3-m.webp', link: 'easy-payment.html', alt: 'Easy Payment - take it home today, pay monthly' }
+      { img: 'assets/img/banners/hero-1.webp', imgWide: 'assets/img/banners/hero-1-wide.webp', imgMobile: 'assets/img/banners/hero-1-m.webp', link: 'shop.html?cat=refrigerators', alt: 'Inverter refrigerators from Rs 131,900' },
+      { img: 'assets/img/banners/hero-2.webp', imgWide: 'assets/img/banners/hero-2-wide.webp', imgMobile: 'assets/img/banners/hero-2-m.webp', link: 'product.html?id=innovex-65-4k-google-qled-tv', alt: '65 inch QLED Google TV now Rs 299,900' },
+      { img: 'assets/img/banners/hero-3.webp', imgWide: 'assets/img/banners/hero-3-wide.webp', imgMobile: 'assets/img/banners/hero-3-m.webp', link: 'easy-payment.html', alt: 'Easy Payment - take it home today, pay monthly' }
     ],
     side: [
       { img: 'assets/img/banners/side-1.webp', link: 'shop.html?cat=air-conditioners', alt: 'Inverter air conditioners from Rs 219,900' },

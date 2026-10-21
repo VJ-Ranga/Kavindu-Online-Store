@@ -71,9 +71,9 @@
 
   var banners = {
     heroSlides: [
-      { img: 'assets/img/banners/hero-1.webp', imgMobile: 'assets/img/banners/hero-1-m.webp', link: 'shop.html?cat=air-conditioners', alt: 'Air conditioner offers' },
-      { img: 'assets/img/banners/hero-2.webp', imgMobile: 'assets/img/banners/hero-2-m.webp', link: 'shop.html?cat=furniture', alt: 'Furniture sale offers' },
-      { img: 'assets/img/banners/hero-3.webp', imgMobile: 'assets/img/banners/hero-3-m.webp', link: 'shop.html?cat=refrigerators', alt: 'Refrigerator offers' }
+      { img: 'assets/img/banners/hero-1.webp', imgWide: 'assets/img/banners/hero-1-wide.webp', imgMobile: 'assets/img/banners/hero-1-m.webp', link: 'shop.html?cat=air-conditioners', alt: 'Air conditioner offers' },
+      { img: 'assets/img/banners/hero-2.webp', imgWide: 'assets/img/banners/hero-2-wide.webp', imgMobile: 'assets/img/banners/hero-2-m.webp', link: 'shop.html?cat=furniture', alt: 'Furniture sale offers' },
+      { img: 'assets/img/banners/hero-3.webp', imgWide: 'assets/img/banners/hero-3-wide.webp', imgMobile: 'assets/img/banners/hero-3-m.webp', link: 'shop.html?cat=refrigerators', alt: 'Refrigerator offers' }
     ],
     heroSide: [
       { img: 'assets/img/banners/side-1.webp', link: 'product.html?id=innovex-65-4k-google-qled-tv', alt: '65 inch 4K QLED TV offer' },
