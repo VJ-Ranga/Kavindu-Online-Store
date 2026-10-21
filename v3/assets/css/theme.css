@@ -557,3 +557,15 @@ body[data-skin="2"] .hero1-grid { gap: 16px; }
 body[data-skin="2"] .hero-side .kv-imgbanner { aspect-ratio: 640 / 252; height: auto; }
 body[data-skin="2"] .hero .kv-slider { border-radius: 12px; }
 @media (max-width: 767.98px) { body[data-skin="2"] .hero > .container:has(.hero1-grid) { padding-inline: 16px; } }
+
+/* Hero layout 1 — mathematically equal heights.
+   Slider ratio r = 1320/520. Side column = two banners of the same ratio + one 16px gap.
+   Equal height when: sliderW = 2*sideW + gap*r  =>  sideW = (100% - gap - gap*r) / 3 */
+@media (min-width: 992px) {
+  .hero1-grid { display: grid !important; grid-template-columns: minmax(0, 1fr) calc((100% - 16px - 16px * 2.53846) / 3) !important; gap: 16px !important; align-items: start !important; }
+  body[data-skin="2"] .hero1-grid { gap: 16px !important; }
+  .hero1-grid .kv-slider { aspect-ratio: 1320 / 520 !important; height: auto !important; width: 100%; }
+  .hero-side { display: flex !important; flex-direction: column; gap: 16px !important; height: auto !important; margin: 0 !important; }
+  .hero-side > * { aspect-ratio: 1320 / 520 !important; height: auto !important; width: 100%; margin: 0 !important; border-radius: var(--radius-card); overflow: hidden; }
+  .hero-side img, .hero-side picture { display: block; width: 100%; height: 100%; object-fit: cover; }
+}
