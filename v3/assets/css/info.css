@@ -1,0 +1,93 @@
+/* INFO pages: stores, about, contact, policies. Uses theme.css tokens. */
+.info-head { background: var(--color-bg-alt); border-bottom: 1px solid var(--color-border); padding-bottom: 28px; }
+.info-head h1 { margin: 0 0 8px; }
+.info-lead { max-width: 720px; color: var(--color-text-muted); margin: 0; }
+.kv-section h2 { font-size: 22px; margin: 0 0 16px; }
+.kv-section h3 { font-size: 16px; margin: 0 0 6px; }
+@media (min-width: 768px) { .kv-section h2 { font-size: 28px; } .kv-section h3 { font-size: 18px; } }
+
+/* stores */
+.store-filter { display: grid; gap: 12px; margin-bottom: 20px; }
+.store-filter label { display: block; font-weight: 500; font-size: 14px; margin-bottom: 4px; }
+.store-count { margin: 0; font-size: 14px; color: var(--color-text-muted); align-self: end; min-height: 44px; display: flex; align-items: center; }
+@media (min-width: 768px) { .store-filter { grid-template-columns: 240px 1fr auto; align-items: end; } }
+.store-layout { display: grid; gap: 20px; }
+@media (min-width: 992px) { .store-layout { grid-template-columns: 5fr 7fr; align-items: start; } .store-map { position: sticky; top: 16px; } }
+.store-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.store-item { border: 1px solid var(--color-border); border-radius: var(--radius-card); padding: 16px; background: #fff; }
+.store-item.is-active { border-color: var(--color-primary); box-shadow: inset 4px 0 0 var(--color-primary); }
+.store-item h3 { margin: 0 0 2px; }
+.store-item .district { font-size: 13px; color: var(--color-text-muted); margin: 0 0 8px; }
+.store-item address { font-style: normal; margin: 0 0 4px; }
+.store-item .hours { font-size: 14px; color: var(--color-text-muted); margin: 0 0 10px; }
+.store-svc { list-style: none; padding: 0; margin: 0 0 12px; display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 13px; }
+.store-svc li::before { content: "\2713\00a0"; color: var(--color-easy); font-weight: 600; }
+.store-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.store-actions .btn-kv { flex: 1 1 auto; justify-content: center; }
+.store-map iframe { width: 100%; height: 320px; border: 1px solid var(--color-border); border-radius: var(--radius-card); display: block; }
+@media (min-width: 992px) { .store-map iframe { height: 520px; } }
+.store-empty { padding: 24px; border: 1px dashed var(--color-border); border-radius: var(--radius-card); color: var(--color-text-muted); }
+.store-note { margin-top: 32px; }
+.store-note h2 { font-size: 20px; margin-bottom: 8px; }
+.store-note p { margin: 0; max-width: 760px; }
+
+/* about */
+.about-story { display: grid; gap: 28px; }
+@media (min-width: 992px) { .about-story { grid-template-columns: 1fr 1fr; align-items: center; gap: 48px; } }
+.about-text p { max-width: 62ch; }
+.about-photo { margin: 0; }
+.about-photo img { width: 100%; height: auto; border-radius: var(--radius-card); display: block; }
+.about-photo figcaption { font-size: 13px; color: var(--color-text-muted); margin-top: 6px; }
+.sell-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--color-border); }
+.sell-list li { padding: 16px 0; border-bottom: 1px solid var(--color-border); }
+.sell-list p { margin: 0; color: var(--color-text-muted); }
+@media (min-width: 768px) { .sell-list li { display: grid; grid-template-columns: 220px 1fr; gap: 24px; } .sell-list h3 { margin: 0; } }
+.why-grid { display: grid; gap: 24px; }
+.why-grid p { margin: 0; color: var(--color-text-muted); }
+.why-grid h3 { padding-left: 12px; border-left: 3px solid var(--color-primary); }
+@media (min-width: 768px) { .why-grid { grid-template-columns: 1fr 1fr; gap: 32px 48px; } }
+.brand-list { list-style: none; margin: 0 0 12px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.brand-list li { border: 1px solid var(--color-border); background: #fff; border-radius: var(--radius-btn); padding: 10px 16px; font-weight: 500; }
+.info-cta { display: grid; gap: 16px; background: var(--color-secondary); color: #fff; border-radius: var(--radius-card); padding: 28px 24px; }
+.info-cta h2 { color: #fff; margin-bottom: 6px; }
+.info-cta p { margin: 0; color: #D8DEE9; }
+.info-cta a:not(.btn-kv) { color: #fff; text-decoration: underline; }
+.info-cta .btn-kv-outline { color: #fff; border-color: #fff; background: transparent; }
+.info-cta-btns { display: flex; flex-wrap: wrap; gap: 10px; }
+@media (min-width: 768px) { .info-cta { grid-template-columns: 1fr auto; align-items: center; padding: 32px; } }
+
+/* contact */
+.contact-grid { display: grid; gap: 32px; }
+@media (min-width: 992px) { .contact-grid { grid-template-columns: 5fr 7fr; gap: 48px; align-items: start; } }
+.contact-list { list-style: none; margin: 0; padding: 0; }
+.contact-list li { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--color-border); }
+.contact-list i { width: 20px; text-align: center; color: var(--color-primary); margin-top: 4px; }
+.contact-list div { display: flex; flex-direction: column; min-width: 0; overflow-wrap: anywhere; }
+.contact-list strong { font-weight: 600; }
+.contact-form h2 { font-size: 20px; margin-bottom: 16px; }
+.contact-form .form-row-first, .contact-form .form-row-last { display: block; width: 100%; margin-right: 0; }
+@media (min-width: 768px) { .contact-form .form-row-first, .contact-form .form-row-last { display: inline-block; width: calc(50% - 8px); } .contact-form .form-row-first { margin-right: 12px; } }
+.contact-form label { display: block; font-weight: 500; font-size: 14px; margin-bottom: 4px; }
+.contact-form input, .contact-form select, .contact-form textarea { width: 100%; }
+.field-error { display: block; color: var(--color-sale); font-size: 13px; margin-top: 4px; }
+.contact-form [aria-invalid=true] { border-color: var(--color-sale); }
+.cf-success { margin-bottom: 16px; }
+.contact-map iframe { width: 100%; height: 320px; border: 1px solid var(--color-border); border-radius: var(--radius-card); display: block; }
+.faq { max-width: 860px; }
+.faq details { border-bottom: 1px solid var(--color-border); }
+.faq summary { cursor: pointer; padding: 14px 0; font-weight: 500; min-height: 44px; }
+.faq summary:focus-visible { outline: 3px solid rgba(28,111,176,.35); outline-offset: 2px; }
+.faq details p { margin: 0 0 14px; color: var(--color-text-muted); }
+
+/* policies */
+.policy-updated { font-size: 14px; color: var(--color-text-muted); margin: 0 0 16px; }
+.page-policies .kv-tabs { position: sticky; top: 0; background: #fff; z-index: 5; }
+.policy { max-width: 820px; scroll-margin-top: 70px; }
+.policy[hidden] { display: none; }
+.policy h2 { margin-bottom: 12px; }
+.policy h3 { margin: 22px 0 6px; }
+.policy p, .policy li { color: var(--color-text); }
+.policy ul, .policy ol { padding-left: 20px; }
+.policy .kv-table { margin: 8px 0; }
+.policy .kv-table th[scope=row] { font-weight: 500; background: transparent; }
+@media (max-width: 575px) { .policy .kv-table th, .policy .kv-table td { padding: 10px 8px; } }

@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Easy Payment monthly instalments | Kavindu Online Store</title>
+<meta name="description" content="Buy furniture, appliances and electronics on Kavindu Easy Payment. Choose 6 to 36 months, check your monthly amount and apply online.">
+<link rel="icon" href="assets/img/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="assets/css/theme.css?v=3">
+<link rel="stylesheet" href="assets/css/account.css?v=3">
+</head>
+<body class="woocommerce-page page-easy-payment">
+<div id="site-header"></div>
+
+<main id="primary" tabindex="-1">
+  <div class="breadcrumb-wrap"><div class="container"><nav class="woocommerce-breadcrumb" aria-label="Breadcrumb"><a href="index.html">Home</a> / Easy Payment</nav></div></div>
+
+  <section class="ep-hero"><div class="container">
+    <h1>Easy Payment: pay for it monthly</h1>
+    <p class="ep-lead">Kavindu's own instalment plan for furniture, appliances, TVs and laptops priced Rs 15,000 and above. Pay a down payment of 20% or more, then settle the balance in equal monthly amounts over 6 to 36 months. No credit card needed.</p>
+    <ul class="ep-jump" aria-label="On this page">
+      <li><a href="#how">How it works</a></li><li><a href="#calculator">Calculator</a></li><li><a href="#eligibility">Eligibility</a></li><li><a href="#apply">Apply online</a></li><li><a href="#faq">FAQ</a></li>
+    </ul>
+  </div></section>
+
+  <section class="kv-section" id="how" aria-labelledby="how-h"><div class="container">
+    <div class="kv-section-head"><h2 id="how-h">How Easy Payment works</h2></div>
+    <ol class="ep-how">
+      <li><span class="n">1</span><h3>Pick a product and a plan</h3><p>Choose any item of Rs 15,000 or more. Select your down payment and the number of months. The calculator below shows the exact monthly amount.</p></li>
+      <li><span class="n">2</span><h3>Apply online</h3><p>Fill in the application with your NIC, income details and four documents. It takes about 10 minutes. A guarantor is optional.</p></li>
+      <li><span class="n">3</span><h3>We review within 1 working day</h3><p>Our credit team checks your documents and calls you on the mobile number you give. You pay the down payment once you are approved.</p></li>
+      <li><span class="n">4</span><h3>Delivery, then monthly payments</h3><p>We deliver and install. Pay each month by card on PayHere, bank transfer or at any showroom.</p></li>
+    </ol>
+    <p class="ep-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> The cash price is always the lowest price. An Easy Payment plan costs more because the balance is paid over time. Rates shown are indicative and final terms are set out in your agreement.</p>
+  </div></section>
+
+  <section class="kv-section kv-section-alt" id="calculator" aria-labelledby="calc-h"><div class="container">
+    <div class="kv-section-head"><h2 id="calc-h">Instalment calculator</h2></div>
+    <div class="ep-calc">
+      <form class="ep-calc-form kv-card-box" id="ep-calc" onsubmit="return false" novalidate>
+        <div class="form-row">
+          <label for="c-product">Product</label>
+          <select id="c-product" name="product"></select>
+        </div>
+        <div class="form-row">
+          <label for="c-price">Cash price (Rs)</label>
+          <input type="number" id="c-price" name="price" inputmode="numeric" min="15000" step="500">
+          <small class="text-muted-kv" id="c-price-hint">Easy Payment is available from Rs 15,000.</small>
+        </div>
+        <div class="form-row">
+          <label for="c-down">Down payment: <strong id="c-down-pct-out">25%</strong></label>
+          <input type="range" id="c-down" min="20" max="60" step="5" value="25" aria-describedby="c-down-amt">
+          <small class="text-muted-kv" id="c-down-amt"></small>
+        </div>
+        <fieldset class="form-row ep-fieldset">
+          <legend>Number of months</legend>
+          <div class="ep-tenures" id="c-tenures" role="group" aria-label="Number of months"></div>
+        </fieldset>
+        <p class="ep-error" id="c-err" role="alert" hidden></p>
+      </form>
+      <div class="ep-result" aria-live="polite">
+        <div class="ep-result-main">
+          <span class="lbl">You pay monthly</span>
+          <span class="big" id="r-monthly">-</span>
+          <span class="sub" id="r-months"></span>
+        </div>
+        <dl class="ep-break">
+          <div><dt>Cash price</dt><dd id="r-cash">-</dd></div>
+          <div><dt>Down payment today</dt><dd id="r-down">-</dd></div>
+          <div><dt>Balance financed</dt><dd id="r-fin">-</dd></div>
+          <div><dt>Plan charge</dt><dd id="r-extra">-</dd></div>
+          <div class="tot"><dt>Total you pay</dt><dd id="r-total">-</dd></div>
+        </dl>
+        <a class="btn-kv btn-kv-easy btn-kv-block" href="#apply" id="r-apply">Apply for this plan</a>
+        <p class="ep-fine">Rates shown are indicative.</p>
+      </div>
+    </div>
+    <div class="ep-table-wrap">
+      <h3 class="ep-h3">All plans for this price</h3>
+      <div class="table-responsive" tabindex="0" role="region" aria-label="Instalment plans comparison">
+        <table class="kv-table ep-table" id="c-table">
+          <thead><tr><th scope="col">Months</th><th scope="col">Monthly amount</th><th scope="col">Down payment</th><th scope="col">Plan charge</th><th scope="col">Total you pay</th><th scope="col"><span class="visually-hidden">Choose</span></th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="kv-section" id="eligibility" aria-labelledby="el-h"><div class="container">
+    <div class="kv-section-head"><h2 id="el-h">Eligibility and documents</h2></div>
+    <div class="ep-two">
+      <div class="kv-card-box">
+        <h3>Who can apply</h3>
+        <ul class="ep-ticks">
+          <li>Sri Lankan citizen aged 21 to 60 with a valid NIC</li>
+          <li>Regular monthly income, salaried or self-employed, at least 3 times the monthly instalment</li>
+          <li>Delivery address within our island-wide delivery area</li>
+          <li>A mobile number registered in your own name</li>
+          <li>Down payment of at least 20% of the cash price</li>
+        </ul>
+      </div>
+      <div class="kv-card-box">
+        <h3>Documents you need</h3>
+        <ul class="ep-ticks">
+          <li><strong>NIC</strong>, front and back (clear photo or scan)</li>
+          <li><strong>Utility bill</strong> from the last 3 months showing your address</li>
+          <li><strong>Salary slip</strong> for the last month, or 3 months bank statements if self-employed</li>
+          <li><strong>Guarantor NIC</strong> only if you choose to add a guarantor</li>
+        </ul>
+        <p class="small text-muted-kv mb-0">Files must be JPG, PNG or PDF, up to 5 MB each.</p>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="kv-section kv-section-alt" id="apply" aria-labelledby="ap-h"><div class="container">
+    <div class="kv-section-head"><h2 id="ap-h">Apply for Easy Payment</h2></div>
+    <div class="ep-app kv-card-box">
+      <ol class="ep-progress" id="a-progress" aria-label="Application progress">
+        <li data-step="1">Plan</li><li data-step="2">Personal</li><li data-step="3">Employment</li><li data-step="4">Guarantor</li><li data-step="5">Documents</li><li data-step="6">Review</li>
+      </ol>
+      <p class="ep-stepcount" id="a-count" aria-live="polite"></p>
+      <form id="ep-form" novalidate autocomplete="on">
+        <div class="ep-panel" data-step="1">
+          <h3 tabindex="-1">Product and plan</h3>
+          <div class="form-row"><label for="a-product">Product <span class="required">*</span></label><select id="a-product" name="product" required></select></div>
+          <div class="form-row"><label for="a-price">Cash price (Rs) <span class="required">*</span></label><input type="number" id="a-price" name="price" min="15000" step="500" required inputmode="numeric"></div>
+          <div class="ep-two-in">
+            <div class="form-row"><label for="a-down">Down payment (%) <span class="required">*</span></label><select id="a-down" name="down"></select></div>
+            <div class="form-row"><label for="a-months">Months <span class="required">*</span></label><select id="a-months" name="months"></select></div>
+          </div>
+          <div class="ep-summary" id="a-plan-sum" aria-live="polite"></div>
+        </div>
+
+        <div class="ep-panel" data-step="2" hidden>
+          <h3 tabindex="-1">Personal details</h3>
+          <div class="ep-two-in">
+            <div class="form-row"><label for="a-name">Full name (as on NIC) <span class="required">*</span></label><input type="text" id="a-name" name="name" autocomplete="name" required></div>
+            <div class="form-row"><label for="a-nic">NIC number <span class="required">*</span></label><input type="text" id="a-nic" name="nic" required maxlength="12" autocapitalize="characters" aria-describedby="a-nic-h" placeholder="199012345678 or 901234567V"><small class="text-muted-kv" id="a-nic-h">Old format 9 digits + V or X, or new 12 digits.</small></div>
+            <div class="form-row"><label for="a-mobile">Mobile number <span class="required">*</span></label><input type="tel" id="a-mobile" name="mobile" required inputmode="tel" autocomplete="tel" maxlength="10" aria-describedby="a-mob-h" placeholder="07XXXXXXXX"><small class="text-muted-kv" id="a-mob-h">10 digits, starting 07.</small></div>
+            <div class="form-row"><label for="a-email">Email (optional)</label><input type="email" id="a-email" name="email" autocomplete="email"></div>
+          </div>
+          <div class="form-row"><label for="a-address">Delivery address <span class="required">*</span></label><input type="text" id="a-address" name="address" autocomplete="street-address" required></div>
+          <div class="form-row"><label for="a-district">District <span class="required">*</span></label><select id="a-district" name="district" required></select></div>
+        </div>
+
+        <div class="ep-panel" data-step="3" hidden>
+          <h3 tabindex="-1">Employment and income</h3>
+          <div class="ep-two-in">
+            <div class="form-row"><label for="a-emptype">Employment type <span class="required">*</span></label>
+              <select id="a-emptype" name="emptype" required><option value="">Select</option><option>Salaried, private sector</option><option>Salaried, government</option><option>Self-employed / business owner</option><option>Overseas employment</option><option>Pensioner</option></select></div>
+            <div class="form-row"><label for="a-employer">Employer or business name <span class="required">*</span></label><input type="text" id="a-employer" name="employer" required autocomplete="organization"></div>
+            <div class="form-row"><label for="a-years">Years in current job <span class="required">*</span></label><input type="number" id="a-years" name="years" min="0" max="50" step="0.5" required inputmode="decimal"></div>
+            <div class="form-row"><label for="a-income">Monthly income (Rs) <span class="required">*</span></label><input type="number" id="a-income" name="income" min="0" step="1000" required inputmode="numeric"></div>
+          </div>
+          <div class="ep-summary" id="a-afford" aria-live="polite"></div>
+        </div>
+
+        <div class="ep-panel" data-step="4" hidden>
+          <h3 tabindex="-1">Guarantor <span class="ep-opt">optional</span></h3>
+          <p class="text-muted-kv">A guarantor can improve your chances if your income is irregular. Skip this step if you do not want to add one.</p>
+          <div class="ep-two-in">
+            <div class="form-row"><label for="g-name">Guarantor full name</label><input type="text" id="g-name" name="gname" autocomplete="off"></div>
+            <div class="form-row"><label for="g-nic">Guarantor NIC</label><input type="text" id="g-nic" name="gnic" maxlength="12" autocapitalize="characters"></div>
+            <div class="form-row"><label for="g-mobile">Guarantor mobile</label><input type="tel" id="g-mobile" name="gmobile" maxlength="10" inputmode="tel" placeholder="07XXXXXXXX"></div>
+            <div class="form-row"><label for="g-rel">Relationship to you</label><input type="text" id="g-rel" name="grel"></div>
+          </div>
+        </div>
+
+        <div class="ep-panel" data-step="5" hidden>
+          <h3 tabindex="-1">Upload documents</h3>
+          <p class="text-muted-kv">JPG, PNG or PDF, up to 5 MB each. Files stay in your browser in this preview.</p>
+          <div class="ep-files" id="a-files"></div>
+        </div>
+
+        <div class="ep-panel" data-step="6" hidden>
+          <h3 tabindex="-1">Review and consent</h3>
+          <div id="a-review" class="ep-review"></div>
+          <div class="form-row ep-check"><label for="a-terms"><input type="checkbox" id="a-terms" name="terms" required> I have read and accept the <a href="policies.html#easy-payment" target="_blank" rel="noopener">Easy Payment terms</a>. <span class="required">*</span></label></div>
+          <div class="form-row ep-check"><label for="a-data"><input type="checkbox" id="a-data" name="data" required> I consent to Kavindu Enterprises collecting and using my personal data, including NIC and income details, to assess this application, in line with the Personal Data Protection Act, No. 9 of 2022 of Sri Lanka, and to contact my guarantor if I named one. <span class="required">*</span></label></div>
+        </div>
+
+        <p class="ep-error" id="a-err" role="alert" hidden></p>
+        <div class="ep-nav">
+          <button type="button" class="btn-kv btn-kv-outline" id="a-back" hidden>Back</button>
+          <button type="button" class="btn-kv btn-kv-easy" id="a-next">Continue</button>
+        </div>
+      </form>
+
+      <div class="ep-done" id="a-done" hidden tabindex="-1">
+        <div class="ep-done-ico"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></div>
+        <h3>Application submitted</h3>
+        <p>Your reference number is <strong class="ep-ref" id="a-ref"></strong>. Keep it for any follow-up.</p>
+        <p>Our credit team will review your documents and call you on <strong id="a-done-mob"></strong> within 1 working day.</p>
+        <div class="ep-done-actions"><a class="btn-kv btn-kv-primary" href="my-account.html?tab=easy-payment">Track in My account</a><a class="btn-kv btn-kv-outline" href="shop.html">Continue shopping</a></div>
+      </div>
+    </div>
+  </div></section>
+
+  <section class="kv-section" id="faq" aria-labelledby="faq-h"><div class="container">
+    <div class="kv-section-head"><h2 id="faq-h">Frequently asked questions</h2></div>
+    <div class="accordion ep-faq" id="faq-acc"></div>
+  </div></section>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/data.js?v=3"></script>
+<script src="assets/js/theme.js?v=3"></script>
+<script src="assets/js/easy-payment.js?v=3"></script>
+</body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Contact us | Kavindu Online Store</title>
+<meta name="description" content="Call, WhatsApp or write to Kavindu Online Store. Hotline, email, head office address, opening hours and a contact form.">
+<link rel="icon" href="assets/img/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+<link rel="stylesheet" href="assets/css/theme.css?v=3">
+<link rel="stylesheet" href="assets/css/info.css?v=3">
+</head>
+<body class="woocommerce-page info-page page-contact">
+<div id="site-header"></div>
+
+<main id="primary" tabindex="-1">
+  <div class="info-head"><div class="container">
+    <nav class="woocommerce-breadcrumb" aria-label="Breadcrumb"><a href="index.html">Home</a> / Contact us</nav>
+    <h1>Contact us</h1>
+    <p class="info-lead">Questions about an order, a warranty claim or Easy Payment? Reach us by phone, WhatsApp or the form below.</p>
+  </div></div>
+  <section class="kv-section"><div class="container contact-grid">
+    <div class="contact-info">
+      <h2>Get in touch</h2>
+      <ul class="contact-list">
+        <li><i class="fa-solid fa-phone" aria-hidden="true"></i><div><strong>Hotline</strong><a href="tel:+94112345678" data-bind="hotline">011 234 5678</a></div></li>
+        <li><i class="fa-brands fa-whatsapp" aria-hidden="true"></i><div><strong>WhatsApp</strong><a href="https://wa.me/94771234567" data-bind="wa">077 123 4567</a></div></li>
+        <li><i class="fa-regular fa-envelope" aria-hidden="true"></i><div><strong>Email</strong><a href="mailto:hello@kavindustore.lk" data-bind="email">hello@kavindustore.lk</a></div></li>
+        <li><i class="fa-solid fa-location-dot" aria-hidden="true"></i><div><strong>Head office</strong><span data-bind="address">No. 45, Main Street, Avissawella</span></div></li>
+        <li><i class="fa-regular fa-clock" aria-hidden="true"></i><div><strong>Opening hours</strong><span>Monday to Saturday 9:00 AM to 7:00 PM</span><span>Sunday 10:00 AM to 5:00 PM</span><span class="small text-muted-kv">Showroom hours may differ slightly. See <a href="stores.html">showrooms</a>.</span></div></li>
+      </ul>
+    </div>
+    <form class="contact-form kv-card-box" id="contact-form" novalidate aria-labelledby="cf-h">
+      <h2 id="cf-h">Send us a message</h2>
+      <div class="woocommerce-message cf-success" id="cf-success" role="status" tabindex="-1" hidden>Thank you. Your message has been received. Our team will reply within one working day.</div>
+      <div class="form-row form-row-first"><label for="cf-name">Full name <abbr class="required" title="required">*</abbr></label><input class="input-text" id="cf-name" name="name" type="text" autocomplete="name" required aria-describedby="cf-name-e"><span class="field-error" id="cf-name-e" hidden></span></div>
+      <div class="form-row form-row-last"><label for="cf-phone">Phone <abbr class="required" title="required">*</abbr></label><input class="input-text" id="cf-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="07X XXX XXXX" required aria-describedby="cf-phone-e"><span class="field-error" id="cf-phone-e" hidden></span></div>
+      <div class="form-row"><label for="cf-email">Email (optional)</label><input class="input-text" id="cf-email" name="email" type="email" autocomplete="email" aria-describedby="cf-email-e"><span class="field-error" id="cf-email-e" hidden></span></div>
+      <div class="form-row"><label for="cf-topic">What is this about? <abbr class="required" title="required">*</abbr></label>
+        <select id="cf-topic" name="topic" required aria-describedby="cf-topic-e"><option value="">Select a topic</option><option>Easy Payment</option><option>Delivery &amp; installation</option><option>Warranty claim</option><option>Order issue</option><option>Product enquiry</option><option>Other</option></select><span class="field-error" id="cf-topic-e" hidden></span></div>
+      <div class="form-row"><label for="cf-msg">Message <abbr class="required" title="required">*</abbr></label><textarea id="cf-msg" name="message" rows="5" required aria-describedby="cf-msg-e"></textarea><span class="field-error" id="cf-msg-e" hidden></span></div>
+      <p class="small text-muted-kv">For order or warranty queries, please include your order number or invoice number.</p>
+      <button class="button alt" type="submit">Send message</button>
+    </form>
+  </div></section>
+
+  <section class="kv-section kv-section-alt" aria-labelledby="map-h"><div class="container">
+    <h2 id="map-h">Head office</h2>
+    <div class="contact-map"><iframe title="Map of the Kavindu head office in Avissawella" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://maps.google.com/maps?q=Main%20Street%2C%20Avissawella%2C%20Sri%20Lanka&amp;output=embed"></iframe></div>
+  </div></section>
+
+  <section class="kv-section" aria-labelledby="faq-h"><div class="container faq">
+    <h2 id="faq-h">Quick answers</h2>
+    <details><summary>How do I track my order?</summary><p>You will get an SMS when your order is dispatched. For anything else, call the hotline with your order number and we will check for you.</p></details>
+    <details><summary>How do I claim warranty?</summary><p>Bring or send your invoice and the product's serial number to any showroom, or choose "Warranty claim" in the form above. We will register the claim and coordinate with the brand's service centre.</p></details>
+    <details><summary>Can I apply for Easy Payment over the phone?</summary><p>You can start the application online or at a showroom. Our team may call you to verify details before approval. See <a href="easy-payment.html">Easy Payment</a>.</p></details>
+    <details><summary>Do you deliver outside Colombo?</summary><p>Yes, islandwide. Delivery time depends on the product and your district. See <a href="policies.html#delivery">delivery policy</a>.</p></details>
+  </div></section>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/data.js?v=3"></script>
+<script src="assets/js/theme.js?v=3"></script>
+<script src="assets/js/info.js?v=3"></script>
+</body>
+</html>
