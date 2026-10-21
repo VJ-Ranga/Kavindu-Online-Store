@@ -72,9 +72,9 @@
   /* Image-only banner slots: staff upload a designed image (text/price baked in) + link. Desktop + optional mobile image. */
   var banners = {
     slides: [
-      { img: 'assets/img/banners/hero-1.webp', imgWide: 'assets/img/banners/hero-1-wide.webp', imgMobile: 'assets/img/banners/hero-1-m.webp', link: 'shop.html?cat=refrigerators', alt: 'Inverter refrigerators from Rs 131,900' },
-      { img: 'assets/img/banners/hero-2.webp', imgWide: 'assets/img/banners/hero-2-wide.webp', imgMobile: 'assets/img/banners/hero-2-m.webp', link: 'product.html?id=innovex-65-4k-google-qled-tv', alt: '65 inch QLED Google TV now Rs 299,900' },
-      { img: 'assets/img/banners/hero-3.webp', imgWide: 'assets/img/banners/hero-3-wide.webp', imgMobile: 'assets/img/banners/hero-3-m.webp', link: 'easy-payment.html', alt: 'Easy Payment - take it home today, pay monthly' }
+      { img: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1320&h=520&q=75', imgWide: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=1920&h=600&q=75', imgMobile: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=800&h=800&q=75', link: 'shop.html?cat=refrigerators', alt: 'Modern kitchen with appliances' },
+      { img: 'https://images.unsplash.com/photo-1631679706909-1844bbd07221?auto=format&fit=crop&w=1320&h=520&q=75', imgWide: 'https://images.unsplash.com/photo-1631679706909-1844bbd07221?auto=format&fit=crop&w=1920&h=600&q=75', imgMobile: 'https://images.unsplash.com/photo-1631679706909-1844bbd07221?auto=format&fit=crop&w=800&h=800&q=75', link: 'product.html?id=innovex-65-4k-google-qled-tv', alt: 'Bright living room furniture' },
+      { img: 'https://images.unsplash.com/photo-1615066390971-03e4e1c36ddf?auto=format&fit=crop&w=1320&h=520&q=75', imgWide: 'https://images.unsplash.com/photo-1615066390971-03e4e1c36ddf?auto=format&fit=crop&w=1920&h=600&q=75', imgMobile: 'https://images.unsplash.com/photo-1615066390971-03e4e1c36ddf?auto=format&fit=crop&w=800&h=800&q=75', link: 'easy-payment.html', alt: 'Dining room furniture' }
     ],
     side: [
       { img: 'assets/img/banners/side-1.webp', link: 'shop.html?cat=air-conditioners', alt: 'Inverter air conditioners from Rs 219,900' },

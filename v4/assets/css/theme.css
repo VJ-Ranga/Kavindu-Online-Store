@@ -453,3 +453,8 @@ li.product .kv-card .add_to_cart_button, li.product .kv-card .button { height: 4
 @media (max-width: 767.98px) { .kv-section-head h2 { font-size: 20px !important; } }
 .hero-fullbleed { width: 100% !important; margin-left: 0 !important; }
 .hero-fullbleed .s-next { right: max(16px, calc(50% - 660px)) !important; } .hero-fullbleed .s-prev { right: calc(max(16px, calc(50% - 660px)) + 48px) !important; }
+
+/* Consistent 24px space between hero and the service tiles under it (all hero layouts) */
+.hero + *, #home-hero + * { margin-top: 0; }
+.hero .service-tiles, .hero-fullbleed + .container .service-tiles, .home-services-wrap, .home-services-wrap .service-tiles { margin-top: 24px !important; }
+.hero .hero-fullbleed + .container { padding-top: 0; }

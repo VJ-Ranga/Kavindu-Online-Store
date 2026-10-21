@@ -392,3 +392,4 @@ button.cm-nav-link { border: 0; background: transparent; cursor: pointer; font-f
 .kv-simple-card .ks-offer + .ks-add, .kv-simple-card .ks-price + .ks-add { margin-top: auto; }
 .kv-simple-card > .ks-add { margin-top: auto !important; }
 .kv-simple-card > :nth-last-child(2) { margin-bottom: 10px; }
+.cm-hero.swiper + * { margin-top: 24px; }
