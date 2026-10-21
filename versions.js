@@ -3,7 +3,6 @@
   var path = location.pathname, cur = (path.match(/\/(v[23])\//) || [])[1] || '';
   var skin = /[?&]opt=[^&]*skin-2/.test(location.search) || (function () { try { return (JSON.parse(localStorage.getItem('kv-options')) || {}).skin === '2'; } catch (e) { return false; } })();
   var items = [
-    ['v2', 'Version 2', 'v2/index.html'],
     ['v3c', 'Version 3 Classic', 'v3/index.html?opt=skin-1'],
     ['v3m', 'Version 3 Modern', 'v3/index.html?opt=skin-2']
   ];
