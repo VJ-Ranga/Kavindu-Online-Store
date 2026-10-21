@@ -359,3 +359,14 @@ button.cm-nav-link { border: 0; background: transparent; cursor: pointer; font-f
   .cm-product-image { height: 155px; padding: 14px; }
   .cm-product-body { padding: 13px; }
 }
+
+/* Image-only banners: staff upload a designed image + link, no text over images */
+.cm-hero.swiper { height: auto !important; min-height: 0 !important; max-width: 1320px; margin: 16px auto 0; border-radius: 12px; overflow: hidden; aspect-ratio: 1320 / 520; }
+.cm-imgslide a, .cm-imgslide picture { display: block; width: 100%; height: 100%; }
+.cm-imgslide img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.cm-promo-imgs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.cm-promo-imgs img { display: block; width: 100%; height: auto; border-radius: 12px; }
+@media (max-width: 1352px) { .cm-hero.swiper { margin-inline: 16px; } }
+@media (max-width: 767.98px) { .cm-hero.swiper { aspect-ratio: 1 / 1; } .cm-promo-imgs { grid-template-columns: 1fr; } }
+.cm-hero .swiper-slide.cm-imgslide { min-height: 0 !important; background: #fff; }
+.cm-hero .swiper-slide.cm-imgslide::before { display: none; }

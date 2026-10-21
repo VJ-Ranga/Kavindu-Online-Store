@@ -5,15 +5,16 @@
   var timers = [];
 
   /* ---------- hero ---------- */
-  function slide(s, i) {
-    return '<div class="kv-slide"><img src="' + esc(s.img) + '" alt="" ' + (i ? 'loading="lazy"' : 'fetchpriority="high"') + ' style="object-position:' + (s.pos || '50% 50%') + '"><div class="slide-box"><span class="kicker">' + esc(s.kicker) + '</span><h2>' + esc(s.title) + '</h2><p>' + esc(s.line) + '</p><a class="btn-kv btn-kv-primary" href="' + s.href + '">' + esc(s.cta) + '</a></div></div>';
+  function pic(b, eager) {
+    return '<picture>' + (b.imgMobile ? '<source media="(max-width:767px)" srcset="' + esc(b.imgMobile) + '">' : '') + '<img src="' + esc(b.img) + '" alt="' + esc(b.alt || '') + '" ' + (eager ? 'fetchpriority="high"' : 'loading="lazy"') + ' decoding="async"></picture>';
   }
-  function sideBanner(b) { return '<a class="side-banner" href="' + b.href + '"><img src="' + esc(b.img) + '" alt="" loading="lazy"><span class="sb-text"><strong>' + esc(b.title) + '</strong>' + esc(b.line) + '</span></a>'; }
+  function slide(s, i) { return '<div class="kv-slide kv-imgslide"><a href="' + esc(s.link) + '">' + pic(s, !i) + '</a></div>'; }
+  function sideBanner(b) { return '<a class="side-banner kv-imgbanner" href="' + esc(b.link) + '">' + pic(b) + '</a>'; }
   function hero() {
     var o = d.body.getAttribute('data-hero') || '1', B = D.banners, h;
     if (o === '2') {
       var s = B.slides[1];
-      h = '<div class="hero-full"><img src="' + esc(s.img) + '" alt="" fetchpriority="high"><div class="container"><div class="hero-panel"><span class="kicker">' + esc(s.kicker) + '</span><h2>' + esc(s.title) + '</h2><p>' + esc(s.line) + '</p><div class="hero-cta"><a class="btn-kv btn-kv-primary" href="' + s.href + '">' + esc(s.cta) + '</a><a class="btn-kv btn-kv-outline" href="easy-payment.html">See Easy Payment plans</a></div></div></div></div>' +
+      h = '<div class="hero-full-img"><div class="kv-slider hero-slider"><div class="kv-slides">' + B.slides.map(slide).join('') + '</div></div></div>' +
         '<div class="container"><ul class="service-tiles"><li><i class="fa-solid fa-truck-fast" aria-hidden="true"></i><span><strong>Free delivery</strong>Colombo, orders over Rs 50,000</span></li><li><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span><strong>Warranty</strong>Genuine manufacturer cover</span></li><li><i class="fa-solid fa-calendar-check" aria-hidden="true"></i><span><strong>Easy Payment</strong>6 to 36 monthly instalments</span></li><li><i class="fa-solid fa-store" aria-hidden="true"></i><span><strong>6 showrooms</strong>Visit and test in store</span></li></ul></div>';
     } else if (o === '3') {
       h = '<div class="container"><div class="hero3-grid"><nav class="hero-catlist" aria-label="Shop by category"><h2>Shop by category</h2><ul>' + D.categories.map(function (c) { return '<li><a href="shop.html?cat=' + c.id + '"><i class="' + c.icon + '" aria-hidden="true"></i><span>' + esc(c.name) + '</span><i class="fa-solid fa-chevron-right chev" aria-hidden="true"></i></a></li>'; }).join('') + '</ul></nav><div class="kv-slider hero-slider h480"><div class="kv-slides">' + B.slides.map(slide).join('') + '</div></div></div></div>';

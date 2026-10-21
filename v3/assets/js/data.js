@@ -69,21 +69,24 @@
     P({ id: 'samsung-galaxy-a56-5g', name: 'Samsung Galaxy A56 5G 8GB / 128GB', brand: 'Samsung', model: 'SM-A566', category: 'laptops-phones', price: 129900, rrp: 139900, keySpec: '5G - 128GB - AMOLED display', specs: { Display: '6.7" Super AMOLED', Storage: '128 GB', Memory: '8 GB', Network: '5G' }, images: [U(I.phone)], description: 'Mid-range 5G smartphone with an AMOLED display.', rating: 4.5, reviews: 33, bestseller: 1 })
   ];
 
+  /* Image-only banner slots: staff upload a designed image (text/price baked in) + link. Desktop + optional mobile image. */
   var banners = {
     slides: [
-      { img: U(I.ac, 1600), kicker: 'Hot weather deal', title: 'Inverter AC from Rs 219,900', line: 'Free installation kit - or Rs 14,660 x 12 months', cta: 'Shop air conditioners', href: 'shop.html?cat=air-conditioners', pos: '60% 50%' },
-      { img: U(I.sofa, 1600), kicker: 'Furniture sale', title: 'Up to 15% off sofas and bedroom sets', line: 'Free delivery in Colombo - Easy Payment up to 36 months', cta: 'Shop furniture', href: 'shop.html?cat=furniture', pos: '50% 60%' },
-      { img: U(I.fridge, 1600), kicker: 'Kitchen upgrade', title: 'Inverter fridges, 10 year compressor warranty', line: 'Innovex 250L No Frost now Rs 131,900', cta: 'Shop refrigerators', href: 'shop.html?cat=refrigerators', pos: '50% 50%' }
+      { img: 'assets/img/banners/hero-1.webp', imgMobile: 'assets/img/banners/hero-1-m.webp', link: 'shop.html?cat=refrigerators', alt: 'Inverter refrigerators from Rs 131,900' },
+      { img: 'assets/img/banners/hero-2.webp', imgMobile: 'assets/img/banners/hero-2-m.webp', link: 'product.html?id=innovex-65-4k-google-qled-tv', alt: '65 inch QLED Google TV now Rs 299,900' },
+      { img: 'assets/img/banners/hero-3.webp', imgMobile: 'assets/img/banners/hero-3-m.webp', link: 'easy-payment.html', alt: 'Easy Payment - take it home today, pay monthly' }
     ],
     side: [
-      { img: U(I.tv, 900), title: '65" 4K QLED TV', line: 'Save Rs 30,000', href: 'product.html?id=innovex-65-4k-google-qled-tv' },
-      { img: U(I.washer, 900), title: 'Washing machines', line: 'From Rs 85,250', href: 'shop.html?cat=washing-machines' }
+      { img: 'assets/img/banners/side-1.webp', link: 'shop.html?cat=air-conditioners', alt: 'Inverter air conditioners from Rs 219,900' },
+      { img: 'assets/img/banners/side-2.webp', link: 'shop.html?cat=washing-machines', alt: 'Washing machines from Rs 85,250' }
     ],
     promos: [
-      { img: U(I.dining, 1200), kicker: 'Furniture', title: 'Dining sets for every family size', line: '6 and 8 seaters in stock', cta: 'Shop dining sets', href: 'shop.html?cat=furniture' },
-      { img: U(I.ac, 1200), kicker: 'Air conditioning', title: 'Choose the right BTU for your room', line: 'Free site visit in Colombo and suburbs', cta: 'Shop air conditioners', href: 'shop.html?cat=air-conditioners' }
+      { img: 'assets/img/banners/promo-1.webp', link: 'shop.html?cat=kitchen-appliances', alt: 'Kitchen appliances from Rs 14,900' },
+      { img: 'assets/img/banners/promo-2.webp', link: 'shop.html?cat=laptops-phones', alt: 'Laptops and phones from Rs 129,900' },
+      { img: 'assets/img/banners/promo-3.webp', link: 'policies.html#delivery', alt: 'Free delivery in Colombo' }
     ]
   };
+
 
   w.KV_DATA = {
     brand: { name: 'Kavindu Online Store', company: 'Kavindu Enterprises (Pvt) Ltd', hotline: '011 234 5678', hotlineTel: '+94112345678', whatsapp: '94771234567', whatsappDisplay: '077 123 4567', email: 'hello@kavindustore.lk', address: 'No. 45, Main Street, Avissawella', hours: 'Mon-Sat 9:00 AM - 7:00 PM, Sun 10:00 AM - 5:00 PM', logo: 'assets/img/logo.svg', logoWhite: 'assets/img/logo-white.svg' },
