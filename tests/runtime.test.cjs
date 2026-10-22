@@ -129,3 +129,20 @@ test('approved mobile defaults differ from desktop sections without replacing th
  kv.options.preset('modern');kv.options.preset('classic');w.matchMedia=()=>({matches:true});assert.equal(kv.options.value('rail2'),'2');assert.equal(kv.options.value('rail3'),'3');assert.equal(kv.options.value('footer'),'1');
  kv.options.set('mfooter','3');kv.options.reset();assert.equal(kv.options.value('footer'),'1');
 });
+
+test('all appearance choices, presets and resets are isolated by device',()=>{
+ const w=runtime(),kv=w.KV;
+ const desktop=kv.options.get();
+ kv.options.set('mskin','2');kv.options.set('mhero','3');kv.options.set('mcats','3');
+ assert.equal(kv.options.value('skin'),'2');assert.equal(kv.options.get().skin,desktop.skin);
+ assert.equal(kv.options.value('hero'),'3');assert.equal(kv.options.get().hero,desktop.hero);
+ kv.options.preset('catalogue','mobile');
+ for(const key of ['skin','header','menu','card','hero','cats','rail1','rail2','rail3','footer'])assert.equal(kv.options.get()[key],desktop[key],key);
+ const mobile=kv.options.get();kv.options.preset('modern','desktop');
+ for(const key of ['mskin','mheader','bottom','mcard','mcols','mhero','mcats','mrail1','mrail2','mrail3','mfooter'])assert.equal(kv.options.get()[key],mobile[key],key);
+ kv.options.reset('desktop');assert.equal(kv.options.get().skin,'1');assert.equal(kv.options.get().mhero,'3');
+ kv.options.reset('mobile');assert.equal(kv.options.value('skin'),'1');assert.equal(kv.options.value('hero'),'1');assert.equal(kv.options.value('cats'),'2');
+ w.matchMedia=()=>({matches:false});assert.equal(kv.options.value('rail2'),'3');assert.equal(kv.options.value('footer'),'2');
+ w.matchMedia=()=>({matches:true});assert.equal(kv.options.value('rail2'),'2');assert.equal(kv.options.value('footer'),'1');
+ const restored=runtime({'kv-options':JSON.stringify(kv.options.get())}).KV;assert.equal(restored.options.value('rail3'),'3');assert.match(restored.options.url(),/mskin-1/);assert.match(restored.options.url(),/mhero-1/);
+});

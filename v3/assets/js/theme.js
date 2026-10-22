@@ -153,9 +153,11 @@
   KV.wishlist = listStore('kv-wishlist'); KV.compare = listStore('kv-compare', 3);
 
   /* ---------- options ---------- */
-  var OPT_DEF = { skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', mcols: '2', hero: '1', cats: '2', card: '2', rail1: '1', rail2: '3', rail3: '1', footer: '2', mrail1: '1', mrail2: '2', mrail3: '3', mfooter: '1' };
+  var OPT_DEF = { skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', mcols: '2', hero: '1', cats: '2', card: '2', rail1: '1', rail2: '3', rail3: '1', footer: '2', mrail1: '1', mrail2: '2', mrail3: '3', mfooter: '1', mskin: '1', mhero: '1', mcats: '2' };
   var RAIL_KEYS = ['rail1', 'rail2', 'rail3'];
-  function optOk(k, v) { return (k === 'header' ? ['1'] : k === 'skin' || k === 'mcols' || k === 'menu' ? ['1', '2'] : ['1', '2', '3']).indexOf(String(v)) > -1; }
+  var MOBILE_KEYS = ['mheader', 'bottom', 'mcard', 'mcols', 'mskin', 'mhero', 'mcats', 'mrail1', 'mrail2', 'mrail3', 'mfooter'];
+  function profileKeys(device) { return Object.keys(OPT_DEF).filter(function (key) { return !device || (MOBILE_KEYS.indexOf(key) > -1) === (device === 'mobile'); }); }
+  function optOk(k, v) { return (k === 'header' ? ['1'] : k === 'skin' || k === 'mskin' || k === 'mcols' || k === 'menu' ? ['1', '2'] : ['1', '2', '3']).indexOf(String(v)) > -1; }
   var OPT_META = [
     { key: 'skin', title: 'Design style', home: false, items: ['Classic retail', 'Modern - bold, rounded, full-width bands'] },
     { key: 'header', title: 'Header', home: false, items: ['Retail - logo, full search and category row'] },
@@ -180,26 +182,26 @@
     return o; })();
   function mobileCard() { return w.matchMedia('(max-width: 991.98px)').matches ? optState.mcard : optState.card; }
   function deviceOption(k) { return w.matchMedia('(max-width: 991.98px)').matches && ('m' + k) in optState ? optState['m' + k] : optState[k]; }
-  function applyOpts() { for (var k in optState) d.body.setAttribute('data-' + k, optState[k]); RAIL_KEYS.concat(['footer']).forEach(function (key) { d.body.setAttribute('data-' + key, deviceOption(key)); }); d.body.setAttribute('data-card', mobileCard()); if (w.history && new URLSearchParams(w.location.search).has('opt')) { try { w.history.replaceState(null, '', KV.options.url()); } catch (e) {} } }
+  function applyOpts() { for (var k in optState) d.body.setAttribute('data-' + k, optState[k]); RAIL_KEYS.concat(['skin', 'hero', 'cats', 'footer']).forEach(function (key) { d.body.setAttribute('data-' + key, deviceOption(key)); }); d.body.setAttribute('data-card', mobileCard()); if (w.history && new URLSearchParams(w.location.search).has('opt')) { try { w.history.replaceState(null, '', KV.options.url()); } catch (e) {} } }
   var PRESETS = [
-    { id: 'classic', title: 'Everyday retail', desc: 'Familiar shopping, offers up front', skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', mcols: '2', hero: '1', cats: '2', card: '2', rail1: '1', rail2: '3', rail3: '1', footer: '2', mrail1: '1', mrail2: '2', mrail3: '3', mfooter: '1' },
-    { id: 'modern', title: 'Modern showcase', desc: 'Wide imagery and clean product rails', skin: '2', header: '1', menu: '2', mheader: '2', bottom: '2', mcard: '2', mcols: '1', hero: '2', cats: '3', card: '2', rail1: '2', rail2: '1', rail3: '3', footer: '2', mrail1: '2', mrail2: '1', mrail3: '3', mfooter: '2' },
-    { id: 'catalogue', title: 'Catalogue first', desc: 'Quick category access and detailed cards', skin: '1', header: '1', menu: '2', mheader: '3', bottom: '3', mcard: '3', mcols: '1', hero: '3', cats: '2', card: '3', rail1: '1', rail2: '2', rail3: '1', footer: '3', mrail1: '1', mrail2: '2', mrail3: '1', mfooter: '3' }
+    { id: 'classic', title: 'Everyday retail', desc: 'Familiar shopping, offers up front', skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', mcols: '2', hero: '1', cats: '2', card: '2', rail1: '1', rail2: '3', rail3: '1', footer: '2', mrail1: '1', mrail2: '2', mrail3: '3', mfooter: '1', mskin: '1', mhero: '1', mcats: '2' },
+    { id: 'modern', title: 'Modern showcase', desc: 'Wide imagery and clean product rails', skin: '2', header: '1', menu: '2', mheader: '2', bottom: '2', mcard: '2', mcols: '1', hero: '2', cats: '3', card: '2', rail1: '2', rail2: '1', rail3: '3', footer: '2', mrail1: '2', mrail2: '1', mrail3: '3', mfooter: '2', mskin: '2', mhero: '2', mcats: '3' },
+    { id: 'catalogue', title: 'Catalogue first', desc: 'Quick category access and detailed cards', skin: '1', header: '1', menu: '2', mheader: '3', bottom: '3', mcard: '3', mcols: '1', hero: '3', cats: '2', card: '3', rail1: '1', rail2: '2', rail3: '1', footer: '3', mrail1: '1', mrail2: '2', mrail3: '1', mfooter: '3', mskin: '1', mhero: '3', mcats: '2' }
   ];
   KV.options = {
     presets: PRESETS,
     value: deviceOption,
     url: function (base) { var u = new URL(base || w.location.href, w.location.href); u.searchParams.set('opt', Object.keys(OPT_DEF).map(function (k) { return k + '-' + optState[k]; }).join(',')); return u.href; },
-    preset: function (id) { var p = PRESETS.filter(function (x) { return x.id === id; })[0]; if (!p) return; Object.keys(OPT_DEF).forEach(function (k) { optState[k] = p[k]; }); save('kv-options', optState); applyOpts(); KV.renderHeader(); KV.renderFooter(); emit('options', { key: 'all' }); KV.sync(); syncOptUi(); },
+    preset: function (id, device) { var p = PRESETS.filter(function (x) { return x.id === id; })[0]; if (!p) return; profileKeys(device).forEach(function (k) { optState[k] = p[k]; }); save('kv-options', optState); applyOpts(); KV.renderHeader(); KV.renderFooter(); emit('options', { key: 'all' }); KV.sync(); syncOptUi(); },
     get: function () { return JSON.parse(JSON.stringify(optState)); },
     set: function (k, v) {
       v = String(v); if (k === 'rail' && optOk('rail1', v)) { RAIL_KEYS.forEach(function (r) { optState[r] = v; }); save('kv-options', optState); applyOpts(); emit('options', { key: 'rail', value: v }); KV.sync(); return; }
       if (!(k in OPT_DEF) || !optOk(k, v)) return;
       optState[k] = v; save('kv-options', optState); applyOpts();
-      if (k === 'header' || k === 'menu' || k === 'mheader') KV.renderHeader(); if (k === 'footer' || k === 'mfooter' || k === 'skin') KV.renderFooter();
-      emit('options', { key: k === 'mcard' || k === 'mcols' ? 'card' : k.replace(/^m(?=rail)/, ''), value: v }); KV.sync(); syncOptUi();
+      if (k === 'header' || k === 'menu' || k === 'mheader') KV.renderHeader(); if (k === 'footer' || k === 'mfooter' || k === 'skin' || k === 'mskin') KV.renderFooter();
+      emit('options', { key: k === 'mcard' || k === 'mcols' ? 'card' : k.replace(/^m(?=rail|skin|hero|cats|footer)/, ''), value: v }); KV.sync(); syncOptUi();
     },
-    reset: function () { optState = JSON.parse(JSON.stringify(OPT_DEF)); save('kv-options', optState); applyOpts(); KV.renderHeader(); KV.renderFooter(); emit('options', { key: 'all', value: null }); KV.sync(); }
+    reset: function (device) { profileKeys(device).forEach(function (key) { optState[key] = OPT_DEF[key]; }); save('kv-options', optState); applyOpts(); KV.renderHeader(); KV.renderFooter(); emit('options', { key: 'all', value: null }); KV.sync(); }
   };
 
   /* ---------- ready queue ---------- */
@@ -398,7 +400,7 @@
     var acc = CATS.map(function (c, i) {
       return '<div class="mm-item"><button class="mm-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mm-' + i + '" aria-expanded="false" aria-controls="mm-' + i + '"><span><i class="' + c.icon + '" aria-hidden="true"></i> ' + esc(c.name) + '</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div id="mm-' + i + '" class="collapse"><ul><li><a href="shop.html?cat=' + c.id + '">All ' + esc(c.name) + '</a></li>' + c.subs.map(function (s) { return '<li><a href="shop.html?cat=' + c.id + '">' + esc(s) + '</a></li>'; }).join('') + '</ul></div></div>';
     }).join('');
-    var presets = '<section class="opt-presets" aria-labelledby="opt-presets-title"><h3 id="opt-presets-title">Start with a complete look</h3><p>Try a combination, then fine-tune any option below.</p><div class="opt-preset-grid">' + PRESETS.map(function (p) { return '<button type="button" class="opt-preset" data-kv-preset="' + p.id + '" aria-pressed="false"><span class="preset-sketch preset-' + p.id + '" aria-hidden="true"><b></b><i></i><em></em></span><strong>' + p.title + '</strong><small>' + p.desc + '</small></button>'; }).join('') + '</div></section>';
+    var presets = '<section class="opt-presets" aria-labelledby="opt-presets-title"><h3 id="opt-presets-title">Start with a complete look</h3><p id="opt-preset-note">Applies only to the selected device.</p><div class="opt-preset-grid">' + PRESETS.map(function (p) { return '<button type="button" class="opt-preset" data-kv-preset="' + p.id + '" aria-pressed="false"><span class="preset-sketch preset-' + p.id + '" aria-hidden="true"><b></b><i></i><em></em></span><strong>' + p.title + '</strong><small>' + p.desc + '</small></button>'; }).join('') + '</div></section>';
     function optionFields(groups) {
       var lastGrp = '';
       return groups.map(function (g) {
@@ -406,9 +408,10 @@
         return gh + '<fieldset class="opt-group" data-opt-home="' + g.home + '" data-opt-key="' + g.key + '"><legend>' + g.title + '</legend>' + g.items.map(function (t, i) { return '<label class="opt-radio"><input type="radio" name="opt-' + g.key + '" value="' + (i + 1) + '" data-kv-opt="' + g.key + '"><span><i class="opt-mini opt-mini-' + g.key + ' opt-mini-' + (i + 1) + '" aria-hidden="true"><b></b><b></b><b></b></i><strong>' + (i + 1) + '</strong> ' + t + '</span></label>'; }).join('') + '</fieldset>';
       }).join('');
     }
-    var desktopKeys = ['header', 'menu', 'card'], mobileKeys = ['mheader', 'bottom', 'mcard', 'mcols'];
+    var mobileGroups = OPT_META.filter(function (g) { return MOBILE_KEYS.indexOf(g.key) > -1; }).concat(OPT_META.filter(function (g) { return ['skin', 'hero', 'cats', 'rail1', 'rail2', 'rail3', 'footer'].indexOf(g.key) > -1; }).map(function (g) { return Object.assign({}, g, { key: 'm' + g.key }); }));
+    var desktopGroups = OPT_META.filter(function (g) { return MOBILE_KEYS.indexOf(g.key) < 0; });
     var deviceTabs = '<div class="opt-device-tabs" role="tablist" aria-label="Device options"><button type="button" role="tab" id="opt-tab-desktop" aria-controls="opt-panel-desktop" data-kv-device="desktop"><i class="fa-solid fa-desktop" aria-hidden="true"></i> Desktop</button><button type="button" role="tab" id="opt-tab-mobile" aria-controls="opt-panel-mobile" data-kv-device="mobile"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> Mobile</button></div>';
-    var opts = deviceTabs + '<div role="tabpanel" id="opt-panel-desktop" aria-labelledby="opt-tab-desktop">' + optionFields(OPT_META.filter(function (g) { return desktopKeys.indexOf(g.key) > -1; })) + '</div><div role="tabpanel" id="opt-panel-mobile" aria-labelledby="opt-tab-mobile">' + optionFields(OPT_META.filter(function (g) { return mobileKeys.indexOf(g.key) > -1; })) + '</div><section class="opt-shared"><h3>Shared appearance</h3><p>Style, hero and categories are shared. Product sections and footer follow the selected device.</p>' + optionFields(OPT_META.filter(function (g) { return desktopKeys.indexOf(g.key) < 0 && mobileKeys.indexOf(g.key) < 0; })) + '</section>';
+    var opts = deviceTabs + '<p class="opt-device-note">Each tab saves its own design. Changing one device does not change the other.</p><div role="tabpanel" id="opt-panel-desktop" aria-labelledby="opt-tab-desktop">' + optionFields(desktopGroups) + '</div><div role="tabpanel" id="opt-panel-mobile" aria-labelledby="opt-tab-mobile">' + optionFields(mobileGroups) + '</div>';
     wrap.innerHTML = '<a class="kv-skip" href="#primary">Skip to content</a>' +
       '<div class="kv-notices" aria-live="polite"></div>' +
       '<div class="offcanvas offcanvas-end kv-drawer" id="kv-cart-drawer" tabindex="-1" aria-labelledby="kv-cart-title"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-cart-title">Your cart <span id="kv-cart-count"></span></h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close cart"></button></div><div class="offcanvas-body" id="kv-cart-body"></div></div>' +
@@ -444,12 +447,10 @@
     ['desktop', 'mobile'].forEach(function (device) { var panel = $('#opt-panel-' + device); if (panel) panel.hidden = device !== optDevice; });
     var home = d.body.classList.contains('home');
     $$('.opt-group, .opt-gh').forEach(function (g) { g.hidden = g.getAttribute('data-opt-home') === 'true' && !home; });
-    $$('.opt-group[data-opt-key]').forEach(function (group) {
-      var key = group.getAttribute('data-opt-key');
-      var selectedKey = optDevice === 'mobile' && RAIL_KEYS.concat(['footer']).indexOf(key) > -1 ? 'm' + key : key;
-      $$('[data-kv-opt]', group).forEach(function (r) { r.setAttribute('data-kv-opt', selectedKey); r.checked = optState[selectedKey] === r.value; });
-    });
-    $$('[data-kv-preset]').forEach(function (b) { var p = PRESETS.filter(function (p) { return p.id === b.dataset.kvPreset; })[0]; b.setAttribute('aria-pressed', Object.keys(OPT_DEF).every(function (k) { return optState[k] === p[k]; })); });
+    $$('[data-kv-opt]').forEach(function (r) { r.checked = optState[r.getAttribute('data-kv-opt')] === r.value; });
+    $$('[data-kv-preset]').forEach(function (b) { var p = PRESETS.filter(function (p) { return p.id === b.dataset.kvPreset; })[0]; b.setAttribute('aria-pressed', profileKeys(optDevice).every(function (k) { return optState[k] === p[k]; })); });
+    var note = $('#opt-preset-note'); if (note) note.textContent = 'Applies only to ' + optDevice + '. Your other device design stays saved.';
+    var reset = $('[data-kv-opt-reset]'); if (reset) reset.textContent = 'Reset ' + optDevice + ' defaults';
     var input = $('#kv-preview-url'); if (input) input.value = KV.options.url();
     var homeLink = $('[data-kv-preview-home]'); if (homeLink) homeLink.href = KV.options.url(new URL('index.html', w.location.href).href);
 
@@ -557,7 +558,7 @@
       if ((el = t.closest('[data-kv-mobile-search]'))) { searchTrigger = el; if (w.bootstrap) w.bootstrap.Modal.getOrCreateInstance($('#kv-search-modal')).show(); return; }
       if ((el = t.closest('[data-kv-menu-toggle]'))) { var panel = d.getElementById(el.getAttribute('aria-controls')); if (panel.hidden) openNavMenu(el.closest('.catalog-item')); else closeNavMenus(false); return; }
       if (!t.closest('.catalog-item')) closeNavMenus(false);
-      if ((el = t.closest('[data-kv-preset]'))) { KV.options.preset(el.dataset.kvPreset); return; }
+      if ((el = t.closest('[data-kv-preset]'))) { KV.options.preset(el.dataset.kvPreset, optDevice); return; }
       if ((el = t.closest('[data-kv-copy]'))) {
         var input = $('#kv-preview-url'), status = $('#kv-copy-status'); input.value = KV.options.url();
         function fallback() { input.focus(); input.select(); status.textContent = 'Link selected. Copy it to share this exact design.'; }
@@ -582,7 +583,7 @@
       if ((el = t.closest('[data-kv-focus-search]'))) { var inp = $('.mhead-search input'); if (inp) inp.focus(); return; }
       if ((el = t.closest('[data-kv-toggle-search]'))) { var pn = $('#hdr2-search'), open = pn.hidden; pn.hidden = !open; el.setAttribute('aria-expanded', open); if (open) $('input', pn).focus(); return; }
       if ((el = t.closest('[data-kv-dismiss-announce]'))) { save('kv-announce-off', 1); var a = $('.hdr-announce'); if (a) a.remove(); return; }
-      if (t.closest('[data-kv-opt-reset]')) { KV.options.reset(); syncOptUi(); return; }
+      if (t.closest('[data-kv-opt-reset]')) { KV.options.reset(optDevice); syncOptUi(); return; }
       if (t.closest('[data-kv-compare-open]')) { renderCompareDrawer(); var o = oc('kv-compare-drawer'); if (o) o.show(); return; }
       if (t.closest('[data-kv-compare-clear]')) { KV.compare.clear(); return; }
       if (!t.closest('.kv-search')) $$('.kv-suggest').forEach(function (u) { u.hidden = true; });
@@ -609,7 +610,7 @@
     applyOpts(); buildShared(); bindEvents();
     KV.renderHeader(); KV.renderFooter(); renderCart(); renderCompareBar(); KV.sync();
     var mobileQuery = w.matchMedia('(max-width: 991.98px)');
-    if (mobileQuery.addEventListener) mobileQuery.addEventListener('change', function () { applyOpts(); KV.renderFooter(); emit('options', { key: 'card' }); });
+    if (mobileQuery.addEventListener) mobileQuery.addEventListener('change', function () { applyOpts(); KV.renderFooter(); emit('options', { key: 'all' }); });
     inited = true; readyQ.forEach(function (f) { f(); }); readyQ = [];
   }
   if (d.readyState === 'loading') d.addEventListener('DOMContentLoaded', init); else init();

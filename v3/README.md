@@ -4,6 +4,26 @@ Static HTML build for **Kavindu Enterprises**, structured with WooCommerce marku
 
 Run from any folder: `python3 -m http.server 8130 --directory /home/vjranga/Documents/chamara/demo` → http://localhost:8130/v3/
 
+
+## Current device profiles (version60)
+
+Desktop and Mobile now have fully separate saved appearance settings, including design style, hero and category presentation. Every control is inside its device tab. Starting-look presets and the reset button affect only that selected device. Preview links include both profiles. Older desktop selections do not overwrite newly introduced mobile settings.
+
+| Setting | Desktop default | Mobile default |
+|---|---|---|
+| Style | Classic | Classic |
+| Header | Retail, full search | Retail, logo row and search |
+| Navigation | Text categories | Standard Shop/Search/Deals/Account bottom bar |
+| Product cards | Image first | Retail, two per row |
+| Hero | Slider +2 banners | Slider +2 banners |
+| Categories | Icon row | Icon row |
+| Best sellers | Tabs +grid | Tabs +grid |
+| Deals | Two featured deals +grid | Carousel |
+| New arrivals | Tabs +grid | Two featured picks +grid |
+| Footer | USP strip +light columns | Navy4 columns |
+
+Use **Reset desktop defaults** and **Reset mobile defaults** to clear previously saved customizations separately. Earlier version notes below are historical; the current configuration supersedes references to shared appearance.
+
 ## Pages
 | Storefront | Admin (wp-admin look) |
 |---|---|

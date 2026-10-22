@@ -99,3 +99,10 @@ Standard desktop grids now show two detailed cards per row instead of one stretc
 Replaced the used outdoor AC stock photo in the homepage banner, category, static buying guide, data guide, LG product gallery and admin starter image. Two Innovex AC demo models now use the clean Gold Fin manufacturer image. Refrigerator category/guide and existing Innovex fridge product photos are local manufacturer assets; the rice cooker no longer uses an unrelated room image. Four JPEG assets are stored locally with source URLs and model-match limitations in `v3/assets/img/products/SOURCES.md`. Existing model/specification/price content is unchanged; some alternate models use representative images as documented.
 
 Verified homepage has zero old AC image elements and all loaded replacement images decode; all three AC catalogue images load;375px LG product image loads without document overflow.21 runtime cases pass. Evidence: `../review/new-ac-homepage.jpg`, `../review/new-ac-products.jpg`.
+
+
+## Complete desktop/mobile profile isolation — version60
+
+Root cause: skin/hero/categories remained shared, while preset/reset operations replaced both profiles. Added independent mskin/mhero/mcats; body presentation and homepage rendering resolve the active viewport's full profile. All appearance controls now live in their device tab with unique radio names. Presets, selected-preset indication and reset buttons operate only on the selected device. Breakpoint changes refresh hero/categories/rails/footer using that device's saved selection. No approved default values changed.
+
+Verified live Desktop style/hero/category changes leave every Mobile choice unchanged; Mobile preset/reset leaves Desktop choices unchanged; mobile changes survive reload; approved mobile375px profile renders Classic1/hero1/categories2/card1/rails1,2,3/footer1; Desktop1440px returns Classic1/hero1/categories2/card2/rails1,3,1/footer2. No document overflow in these samples.22 regression cases pass, including independent presets/resets, persistence and preview links. Evidence: `../review/separate-mobile-profile.jpg`, `../review/separate-desktop-profile.jpg`.

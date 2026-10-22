@@ -144,6 +144,6 @@
   KV.ready(function () { all(); calc(); showroom(); });
   w.addEventListener('kv:options', function (e) {
     var k = e.detail.key;
-    if (k === 'hero') hero(); else if (k === 'cats') cats(); else if (/^rail/.test(k) || k === 'card') rails(); else if (k === 'all') all();
+    if (k === 'hero') hero(); else if (k === 'cats') cats(); else if (/^rail/.test(k) || k === 'card') rails(); else if (k === 'all' || k === 'skin') all();
   });
 })(window, document);
