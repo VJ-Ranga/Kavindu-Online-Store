@@ -83,3 +83,6 @@ Version49: removed Compact icon tabs from desktop navigation. Remaining choices 
 
 
 Version55: Everyday retail is the default approved desktop combination: Classic skin, Retail header, text category submenus, Image first product cards, Slider +2 banners, category Icon row, Best sellers Tabs +grid, Deals Two featured deals +grid, New arrivals Tabs +grid, and USP strip +light footer. New visitors, Reset to defaults and Everyday retail all use this selection. Explicit preview links and saved personal choices remain supported. Mobile header/bottom/card/column defaults are unchanged.
+
+
+Version56: approved mobile Everyday retail defaults are Retail header, standard four-tab bottom bar, retail product cards, two products per row, Classic style, Slider +2 banners, Icon category row, tabbed Best sellers, carousel Deals, two featured New arrivals +grid, and navy footer. Mobile product sections/footer are stored independently as mrail1/mrail2/mrail3/mfooter and included in preview links. The selected Desktop/Mobile tab determines which section/footer settings the controls edit. Style/hero/categories remain shared. Breakpoint changes rerender rails/footer with their device-specific selection. Approved desktop defaults are preserved.

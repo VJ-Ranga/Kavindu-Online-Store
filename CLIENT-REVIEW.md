@@ -122,3 +122,6 @@ Verified Furniture focus opening, Escape closing, direct category navigation,17 
 
 
 Version46 supersedes the shared header spacing changes: Classic retail styling restored, Modern spacing scoped to skin2. Simple hover dropdowns include visible chevron controls and distinct child menu rows. The top row intentionally contains fewer categories to keep Deals on the same line; all eight categories remain in All categories. See UI-UX-AUDIT.md for measured checks.
+
+
+Approved mobile defaults (version56): Retail mobile header; standard bottom bar; retail cards, two per row; Classic skin; Slider +2 banners; Icon categories; Best sellers Tabs +grid; Deals Carousel; New arrivals Two featured picks +grid; Navy footer. Device-specific rails/footer preserve the separately approved desktop default.21 regression cases pass, including independent saving/reset/preset behavior; live375px controls and1440px restoration verified.

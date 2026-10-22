@@ -119,3 +119,13 @@ test('fresh defaults, Everyday retail and reset use the approved desktop selecti
  for(const key of ['mheader','bottom','mcard'])assert.equal(kv.options.get()[key],'1');
  assert.equal(kv.options.get().mcols,'2');
 });
+
+test('approved mobile defaults differ from desktop sections without replacing them',()=>{
+ const w=runtime(),kv=w.KV;
+ for(const [key,value] of Object.entries({rail1:'1',rail2:'2',rail3:'3',footer:'1'}))assert.equal(kv.options.value(key),value,key);
+ kv.options.set('mrail2','1');assert.equal(kv.options.value('rail2'),'1');assert.equal(kv.options.get().rail2,'3');
+ const saved=runtime({'kv-options':JSON.stringify(kv.options.get())}).KV;assert.equal(saved.options.value('rail2'),'1');assert.match(saved.options.url(),/mrail2-1/);
+ w.matchMedia=()=>({matches:false});assert.equal(kv.options.value('rail2'),'3');assert.equal(kv.options.value('footer'),'2');
+ kv.options.preset('modern');kv.options.preset('classic');w.matchMedia=()=>({matches:true});assert.equal(kv.options.value('rail2'),'2');assert.equal(kv.options.value('rail3'),'3');assert.equal(kv.options.value('footer'),'1');
+ kv.options.set('mfooter','3');kv.options.reset();assert.equal(kv.options.value('footer'),'1');
+});
