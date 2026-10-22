@@ -92,3 +92,10 @@ User corrected the intended density to four columns. Featured layout now contain
 ## Detailed card grid density — version 54
 
 Standard desktop grids now show two detailed cards per row instead of one stretched list item. Each card keeps image/details together and moves purchase controls below, eliminating the distant right-hand purchase column. Carousel and four-column featured layouts retain their separate structures; mobile detailed cards remain one per row. Verified1440px homepage cards at626px each,1025px Shop with two301px cards and no content/document overflow, and375px mobile with one328px card column and no document overflow. Evidence: `../review/detailed-two-columns.jpg`.
+
+
+## Product image refresh — version 59
+
+Replaced the used outdoor AC stock photo in the homepage banner, category, static buying guide, data guide, LG product gallery and admin starter image. Two Innovex AC demo models now use the clean Gold Fin manufacturer image. Refrigerator category/guide and existing Innovex fridge product photos are local manufacturer assets; the rice cooker no longer uses an unrelated room image. Four JPEG assets are stored locally with source URLs and model-match limitations in `v3/assets/img/products/SOURCES.md`. Existing model/specification/price content is unchanged; some alternate models use representative images as documented.
+
+Verified homepage has zero old AC image elements and all loaded replacement images decode; all three AC catalogue images load;375px LG product image loads without document overflow.21 runtime cases pass. Evidence: `../review/new-ac-homepage.jpg`, `../review/new-ac-products.jpg`.

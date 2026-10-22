@@ -234,3 +234,10 @@ body[data-skin] .kv-header .allc-fly > ul > li > a:focus-visible { background: v
   body[data-skin] ul.products:not(.rail-list):not(.featured-products):not(.deal-grid) > li.card-3 .product-main { grid-row: 1; }
   body[data-skin] ul.products:not(.rail-list):not(.featured-products):not(.deal-grid) > li.card-3 .product-buy { grid-column: 1 / -1; grid-row: 2; border-left: 0; border-top: 1px solid var(--color-border); padding: 12px 0 0; }
 }
+
+/* Product photography should remain fully visible in promotional/category slots. */
+.side-banner img[src*="/products/"], .guide img[src*="/products/"],
+.cat-circle img[src*="/products/"], .cat-tile img[src*="/products/"] { object-fit: contain; background: #fff; }
+.side-banner img[src*="/products/"] { padding: 0; }
+
+.hero-side .side-banner img[src*="/products/"] { object-fit: cover !important; }
