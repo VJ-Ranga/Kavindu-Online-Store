@@ -10,7 +10,7 @@ Run from any folder: `python3 -m http.server 8130 --directory /home/vjranga/Docu
 | index · shop · product (`?id=`) · cart · checkout · pay (`?gw=payhere\|koko\|mintpay`) · order-received · easy-payment · my-account · stores · about · contact · policies | admin/index · orders · order (`?id=`) · products · easy-payment · settings-payments |
 
 ## Theme options (floating "Theme options" button, bottom-left)
-Design style (skin) ×2 · Desktop header ×1 (Retail) · Hero ×3 · Category display ×3 · Product card ×3 · Homepage product sections (rail1 Best sellers, rail2 Deals, rail3 New arrivals) ×3 each · Footer ×3. Skin 2 = Modern: `?opt=skin-2`. Defaults rail1-1, rail2-3, rail3-2; old `rail-N` still sets all three.
+Design style (skin) ×2 · Desktop header ×1 (Retail) · Hero ×3 · Category display ×3 · Product card ×3 · Homepage product sections (rail1 Best sellers, rail2 Deals, rail3 New arrivals) ×3 each · Footer ×3. Skin 2 = Modern: `?opt=skin-2`. Defaults rail1-1, rail2-3, rail3-1; old `rail-N` still sets all three.
 Shareable preview links (also saves the choice):
 - `index.html?opt=header-1,hero-1,cats-1,card-1,rail1-1,rail2-1,rail3-1,footer-1` — Retail classic (Courts style)
 - `index.html?opt=header-2,hero-2,cats-2,card-2,rail1-2,rail2-2,rail3-2,footer-2` — Centered header, full-width banner
@@ -80,3 +80,6 @@ Version48: desktop Header is fixed to Retail (logo, full search and category row
 
 
 Version49: removed Compact icon tabs from desktop navigation. Remaining choices are Text categories and Category icons, both with submenus. Older menu3 saved selections and preview links migrate to Category icons (menu2). Other controls are unchanged.
+
+
+Version55: Everyday retail is the default approved desktop combination: Classic skin, Retail header, text category submenus, Image first product cards, Slider +2 banners, category Icon row, Best sellers Tabs +grid, Deals Two featured deals +grid, New arrivals Tabs +grid, and USP strip +light footer. New visitors, Reset to defaults and Everyday retail all use this selection. Explicit preview links and saved personal choices remain supported. Mobile header/bottom/card/column defaults are unchanged.

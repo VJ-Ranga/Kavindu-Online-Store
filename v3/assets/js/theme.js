@@ -153,7 +153,7 @@
   KV.wishlist = listStore('kv-wishlist'); KV.compare = listStore('kv-compare', 3);
 
   /* ---------- options ---------- */
-  var OPT_DEF = { skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', mcols: '2', hero: '1', cats: '1', card: '1', rail1: '1', rail2: '3', rail3: '2', footer: '1' };
+  var OPT_DEF = { skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', mcols: '2', hero: '1', cats: '2', card: '2', rail1: '1', rail2: '3', rail3: '1', footer: '2' };
   var RAIL_KEYS = ['rail1', 'rail2', 'rail3'];
   function optOk(k, v) { return (k === 'header' ? ['1'] : k === 'skin' || k === 'mcols' || k === 'menu' ? ['1', '2'] : ['1', '2', '3']).indexOf(String(v)) > -1; }
   var OPT_META = [
@@ -181,7 +181,7 @@
   function mobileCard() { return w.matchMedia('(max-width: 991.98px)').matches ? optState.mcard : optState.card; }
   function applyOpts() { for (var k in optState) d.body.setAttribute('data-' + k, optState[k]); d.body.setAttribute('data-card', mobileCard()); if (w.history && new URLSearchParams(w.location.search).has('opt')) { try { w.history.replaceState(null, '', KV.options.url()); } catch (e) {} } }
   var PRESETS = [
-    { id: 'classic', title: 'Everyday retail', desc: 'Familiar shopping, offers up front', skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', mcols: '2', hero: '1', cats: '1', card: '1', rail1: '1', rail2: '3', rail3: '2', footer: '1' },
+    { id: 'classic', title: 'Everyday retail', desc: 'Familiar shopping, offers up front', skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', mcols: '2', hero: '1', cats: '2', card: '2', rail1: '1', rail2: '3', rail3: '1', footer: '2' },
     { id: 'modern', title: 'Modern showcase', desc: 'Wide imagery and clean product rails', skin: '2', header: '1', menu: '2', mheader: '2', bottom: '2', mcard: '2', mcols: '1', hero: '2', cats: '3', card: '2', rail1: '2', rail2: '1', rail3: '3', footer: '2' },
     { id: 'catalogue', title: 'Catalogue first', desc: 'Quick category access and detailed cards', skin: '1', header: '1', menu: '2', mheader: '3', bottom: '3', mcard: '3', mcols: '1', hero: '3', cats: '2', card: '3', rail1: '1', rail2: '2', rail3: '1', footer: '3' }
   ];

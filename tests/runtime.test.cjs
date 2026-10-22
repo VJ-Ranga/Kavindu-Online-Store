@@ -37,7 +37,7 @@ test('saved carts ignore missing products and invalid quantities',()=>{
 test('preview links contain the entire selection and preserve page filters',()=>{
  const kv=runtime().KV;kv.options.set('skin','2');kv.options.set('header','3');
  const u=new URL(kv.options.url('https://example.test/v3/shop.html?cat=furniture'));
- assert.equal(u.searchParams.get('cat'),'furniture');assert.match(u.searchParams.get('opt'),/skin-2/);assert.match(u.searchParams.get('opt'),/header-1/);assert.match(u.searchParams.get('opt'),/footer-1/);
+ assert.equal(u.searchParams.get('cat'),'furniture');assert.match(u.searchParams.get('opt'),/skin-2/);assert.match(u.searchParams.get('opt'),/header-1/);assert.match(u.searchParams.get('opt'),/footer-2/);
 });
 test('ready-made combinations retain individual controls',()=>{
  const kv=runtime().KV;assert.equal(kv.options.presets.length,3);kv.options.preset('modern');assert.equal(kv.options.get().skin,'2');kv.options.set('hero','3');assert.equal(kv.options.get().hero,'3');
@@ -108,4 +108,14 @@ test('desktop header is limited to Retail, including saved selections and preset
 test('removed compact icon menu restores as the remaining category icon menu',()=>{
  const kv=runtime({'kv-options':JSON.stringify({menu:'3'})}).KV;
  assert.equal(kv.options.get().menu,'2');kv.options.set('menu','3');assert.equal(kv.options.get().menu,'2');assert.doesNotMatch(kv.options.url(),/menu-3/);
+});
+
+test('fresh defaults, Everyday retail and reset use the approved desktop selection',()=>{
+ const expected={skin:'1',header:'1',menu:'1',card:'2',hero:'1',cats:'2',rail1:'1',rail2:'3',rail3:'1',footer:'2'};
+ const kv=runtime({},false).KV;
+ function check(){const options=kv.options.get();for(const [key,value] of Object.entries(expected))assert.equal(options[key],value,key);}
+ check();kv.options.preset('modern');kv.options.preset('classic');check();
+ kv.options.preset('catalogue');kv.options.reset();check();
+ for(const key of ['mheader','bottom','mcard'])assert.equal(kv.options.get()[key],'1');
+ assert.equal(kv.options.get().mcols,'2');
 });
