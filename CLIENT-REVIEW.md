@@ -65,3 +65,27 @@ node /home/vjranga/Documents/chamara/demo/tests/runtime.test.cjs
 Three independent mobile controls are available in Theme options: `mheader` (retail / compact / search first), `bottom` (standard / floating pill / compact tiles), and `mcard` (retail grid / image first / detailed list). Each has values 1–3, persists locally, is included in preview links, and resets with the complete design. Desktop header/card selections remain independent; card markup updates at the 992px breakpoint. All bottom styles contain exactly Shop, Search, Cart, Account. The logo links home. Search opens an accessible dialog with autofocus, suggestions, no-results feedback, category shortcuts, Escape dismissal and search form submission. Image-first card actions remain visible on mobile.
 
 Verification: all three values in both skins at 375px, all 27 mobile combinations in Modern at 320px, real search submission and no-results state, live radio updates, desktop/mobile breakpoint restoration, and 11 passing runtime tests. A targeted read-only code review found no remaining issues. Screenshots: `review/mobile-search.jpg` and `review/mobile-options.jpg` under the workspace root. Changes remain local.
+
+
+### Header cleanup and confirmed location count
+Removed repeated Easy Payment links from all desktop navigation/mega-menu variants; each desktop header retains one top-row Easy Payment entry. Removed the mobile Deals / Easy Payment / Stores shortcut strip. All three mobile headers now center the logo independently of left/right control widths. The business has one location: Avissawella. Replaced six sample branches with that single existing brand address throughout pickup, showroom availability and store views; removed multiple-showroom claims from home, footer, about and contact copy. Exact address/hours/phone still use the existing demonstration values pending client confirmation.
+
+Verified three centered mobile logos at375px, all nine header/menu combinations at1440px (zero payment links inside main navigation, one primary Easy Payment entry each, no document overflow), and 12 passing runtime tests. Asset version23.
+
+
+### Product-card hover cleanup
+Removed card/image lift, shadows and hover-triggered transparent surfaces in both skins. All three card variants retain stable white bordered containers. Cart buttons use a consistent blue rectangular treatment, with color feedback on interaction. The image-first variant exposes Wishlist, Compare and Quick View in a normal-flow toolbar beneath the details, followed by Add to cart; controls no longer slide over the image. List-style cards retain their separate information/purchase layout and use aligned spacing. All original card options remain available.
+
+Verification: all 18 skin/card/viewport combinations were inspected with the pointer actually hovering the card at320px,375px and1440px. Computed surfaces stayed white, transforms/shadows stayed absent, image-first actions stayed visible/static, and no document overflow appeared. The three homepage card variants also passed a375px grid/feature/carousel check. Twelve runtime tests and a targeted code review passed; no browser console errors captured. Asset version24. Evidence: `review/cards-mobile-refined.jpg`, `review/cards-desktop-refined.jpg`, `review/cards-refined-qa.json` under the workspace root.
+
+
+### Full-card links and device option tabs
+All three product card styles and homepage feature cards use native stretched product links: clicking the image, information or unused card surface opens product details. Cart, wishlist, compare and quick-view controls sit above the product link and retain their separate behavior. Hover remains a subtle border/button/link color treatment, with no movement, shadow or surface swap. Keyboard focus has a visible outline.
+
+Theme options now opens with Desktop and Mobile tabs. Desktop contains header/navigation/card choices; Mobile contains header/bottom-bar/card choices. Shared appearance clearly labels the settings used on both screens. Device tab defaults to the viewport at load and supports Left/Right/Home/End keyboard navigation. Presets and sharing remain available below.
+
+Verified full-card navigation across all three styles at375px and1440px, a homepage feature-card click, independent wishlist/quick-view actions, device tab filtering/defaults and keyboard changes. All13 runtime tests and targeted read-only review passed. Asset version26. Screenshot: `review/theme-options-device-tabs.jpg` under the workspace root.
+
+
+### Card presentation audit
+See `CARD-AUDIT.md` for findings, research sources, the contained labeled action toolbar, independent one/two-column mobile setting, larger images and repaired catalogue List view. All54 sampled catalogue/homepage combinations passed overflow/toolbar checks;14 runtime tests passed. Asset version29.

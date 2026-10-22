@@ -94,7 +94,7 @@
     $$('.view-toggle .kv-chip').forEach(function (b) { var on = b.dataset.view === S.view; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
     var host = $('#shop-loop');
     host.className = S.view === 'list' ? 'view-list' : '';
-    host.innerHTML = total ? KV.grid(slice, { cols: 3 }) : '<div class="shop-empty"><h2>No products match your filters</h2><p>Try removing a filter, or browse a category.</p><a class="button alt" href="shop.html">View all products</a></div>';
+    host.innerHTML = total ? KV.grid(slice, { cols: 3, opt: S.view === 'list' ? '3' : undefined }) : '<div class="shop-empty"><h2>No products match your filters</h2><p>Try removing a filter, or browse a category.</p><a class="button alt" href="shop.html">View all products</a></div>';
     var pg = '';
     if (pages > 1) {
       pg = '<ul class="page-numbers">';

@@ -59,13 +59,9 @@
 @media (min-width: 768px) { #shop-loop ul.products { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; } }
 @media (min-width: 1200px) { #shop-loop ul.products { gap: 28px 24px; } }
 @media (min-width: 992px) { body[data-card="3"] #shop-loop ul.products { grid-template-columns: 1fr; } }
-#shop-loop.view-list ul.products { grid-template-columns: 1fr; gap: 16px; }
-@media (min-width: 640px) {
-  #shop-loop.view-list ul.products:not(:has(.product-row)) li.product { display: grid; grid-template-columns: 240px minmax(0, 1fr); column-gap: 24px; align-items: start; text-align: left; padding: 16px; }
-  #shop-loop.view-list ul.products:not(:has(.product-row)) li.product > a.woocommerce-LoopProduct-link { grid-column: 1 / -1; display: grid; grid-template-columns: 240px minmax(0, 1fr); column-gap: 24px; align-content: start; }
-  #shop-loop.view-list ul.products:not(:has(.product-row)) li.product > a.woocommerce-LoopProduct-link > img { grid-row: 1 / span 8; width: 240px; }
-  #shop-loop.view-list ul.products:not(:has(.product-row)) li.product > .button { grid-column: 2; justify-self: start; width: auto; min-width: 200px; margin-top: 8px; }
-}
+#shop-loop.view-list ul.products { grid-template-columns: minmax(0,1fr) !important; gap: 16px; }
+#shop-loop.view-list ul.products li.product { display: block; padding: 0; }
+
 .shop-empty { text-align: center; padding: 56px 16px; border: 1px solid var(--color-border); border-radius: var(--radius-card); }
 .shop-empty h2 { font-size: 20px; } .shop-empty p { color: var(--color-text-muted); }
 

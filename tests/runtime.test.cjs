@@ -65,3 +65,15 @@ test('mobile card choices do not replace desktop card selections',()=>{
  const mobile=runtime({},true).KV;mobile.options.set('card','3');mobile.options.set('mcard','2');
  assert.match(mobile.card(mobile.products[0]),/card-2/);
 });
+test('showroom data contains the single Avissawella location',()=>{
+ const w=runtime();assert.equal(w.KV_DATA.stores.length,1);assert.equal(w.KV_DATA.stores[0].name,'Avissawella');assert.equal(w.KV_DATA.stores[0].address,w.KV_DATA.brand.address);
+});
+
+test('every product card exposes a native stretched product link and separate cart action',()=>{
+ const kv=runtime().KV;for(const opt of ['1','2','3']) {const html=kv.card(kv.products[0],{opt});assert.match(html,/class="[^"]*kv-stretch/);assert.match(html,/data-kv-add=/);assert.match(html,/href="product.html\?id=/);}
+});
+
+test('mobile column count is independent, validated and included in shared selections',()=>{
+ const kv=runtime().KV;kv.options.set('mcard','2');kv.options.set('mcols','1');assert.equal(kv.options.get().mcols,'1');assert.equal(kv.options.get().mcard,'2');assert.match(kv.options.url(),/mcols-1/);kv.options.set('mcols','3');assert.equal(kv.options.get().mcols,'1');
+ const restored=runtime({'kv-options':JSON.stringify(kv.options.get())}).KV;assert.equal(restored.options.get().mcols,'1');kv.options.preset('modern');assert.equal(kv.options.get().mcols,'1');kv.options.reset();assert.equal(kv.options.get().mcols,'2');
+});

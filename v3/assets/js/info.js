@@ -7,7 +7,7 @@
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
 
   /* ---------- stores ---------- */
-  var DISTRICT = { 'Colombo 03': 'Colombo', 'Nugegoda': 'Colombo', 'Kandy': 'Kandy', 'Kurunegala': 'Kurunegala', 'Galle': 'Galle', 'Negombo': 'Gampaha' };
+  var DISTRICT = { 'Avissawella': 'Colombo' };
   // TO CONFIRM per showroom: services offered (all assumed to have delivery, installation and an Easy Payment desk)
   var SERVICES = ['Islandwide delivery', 'Installation', 'Easy Payment desk'];
   function initStores() {

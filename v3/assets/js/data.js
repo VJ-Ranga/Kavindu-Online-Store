@@ -106,12 +106,7 @@
     bankInstalments: [{ months: 3 }, { months: 6 }, { months: 12 }],
     banks: [{ name: 'Sampath', terms: '0% up to 24 months' }, { name: 'Commercial Bank', terms: '0% up to 24 months' }, { name: 'HNB', terms: '0% up to 18 months' }, { name: 'NTB / Amex', terms: '0% up to 24 months' }, { name: 'DFCC', terms: '0% up to 12 months' }, { name: 'Seylan', terms: '0% up to 12 months' }],
     stores: [
-      { name: 'Colombo 03', address: '125 Galle Road, Colombo 03', phone: '011 234 5678', hours: '9:00 AM - 7:00 PM' },
-      { name: 'Nugegoda', address: '48 High Level Road, Nugegoda', phone: '011 234 5679', hours: '9:00 AM - 7:00 PM' },
-      { name: 'Kandy', address: '22 Dalada Veediya, Kandy', phone: '081 234 5678', hours: '9:00 AM - 6:30 PM' },
-      { name: 'Kurunegala', address: '16 Rajapihilla Mawatha, Kurunegala', phone: '037 234 5678', hours: '9:00 AM - 6:30 PM' },
-      { name: 'Galle', address: '88 Wakwella Road, Galle', phone: '091 234 5678', hours: '9:00 AM - 6:30 PM' },
-      { name: 'Negombo', address: '31 Main Street, Negombo', phone: '031 234 5678', hours: '9:00 AM - 6:30 PM' }
+      { name: 'Avissawella', district: 'Colombo', address: 'No. 45, Main Street, Avissawella', phone: '011 234 5678', hours: '9:00 AM - 7:00 PM' }
     ],
     districts: ['Ampara', 'Anuradhapura', 'Badulla', 'Batticaloa', 'Colombo', 'Galle', 'Gampaha', 'Hambantota', 'Jaffna', 'Kalutara', 'Kandy', 'Kegalle', 'Kilinochchi', 'Kurunegala', 'Mannar', 'Matale', 'Matara', 'Monaragala', 'Mullaitivu', 'Nuwara Eliya', 'Polonnaruwa', 'Puttalam', 'Ratnapura', 'Trincomalee', 'Vavuniya'],
     img: U

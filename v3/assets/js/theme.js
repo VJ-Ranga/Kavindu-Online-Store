@@ -153,19 +153,20 @@
   KV.wishlist = listStore('kv-wishlist'); KV.compare = listStore('kv-compare', 3);
 
   /* ---------- options ---------- */
-  var OPT_DEF = { skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', hero: '1', cats: '1', card: '1', rail1: '1', rail2: '3', rail3: '2', footer: '1' };
+  var OPT_DEF = { skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', mcols: '2', hero: '1', cats: '1', card: '1', rail1: '1', rail2: '3', rail3: '2', footer: '1' };
   var RAIL_KEYS = ['rail1', 'rail2', 'rail3'];
-  function optOk(k, v) { return (k === 'skin' ? ['1', '2'] : ['1', '2', '3']).indexOf(String(v)) > -1; }
+  function optOk(k, v) { return (k === 'skin' || k === 'mcols' ? ['1', '2'] : ['1', '2', '3']).indexOf(String(v)) > -1; }
   var OPT_META = [
     { key: 'skin', title: 'Design style', home: false, items: ['Classic retail', 'Modern - bold, rounded, full-width bands'] },
     { key: 'header', title: 'Header', home: false, items: ['Retail classic - top bar, search, mega menu', 'Centered - boutique logo and mega panels', 'Compact sticky - one row with offer strip'] },
     { key: 'menu', title: 'Desktop navigation', home: false, items: ['Standard category links', 'Category icons', 'Department mega menu'] },
-    { key: 'mheader', title: 'Mobile header', home: false, items: ['Retail - logo row and search field', 'Compact - logo row with search button', 'Search first - prominent search and quick links'] },
+    { key: 'mheader', title: 'Mobile header', home: false, items: ['Retail - logo row and search field', 'Compact - logo row with search button', 'Search first - prominent search field'] },
     { key: 'bottom', title: 'Mobile bottom navigation', home: false, items: ['Standard four-tab bar', 'Floating pill with active tab', 'Compact icon tiles'] },
-    { key: 'mcard', title: 'Mobile product cards', home: false, items: ['Retail grid - price and payment details', 'Image first - visible shopping actions', 'Detailed horizontal list'] },
+    { key: 'mcard', title: 'Mobile product cards', home: false, items: ['Retail grid - price and payment details', 'Image first - visible shopping actions', 'Detailed - image, specs and delivery'] },
+    { key: 'mcols', title: 'Mobile grid columns', home: false, items: ['One product per row - larger images', 'Two products per row - compact browsing'] },
     { key: 'hero', title: 'Hero (home)', home: true, items: ['Slider + 2 banners', 'Full-width banner + service tiles', 'Category list + slider'] },
     { key: 'cats', title: 'Categories (home)', home: true, items: ['Image tiles', 'Icon row', 'Circle images'] },
-    { key: 'card', title: 'Product card', home: false, items: ['Standard retail', 'Hover actions', 'Detailed list-style'] },
+    { key: 'card', title: 'Product card', home: false, items: ['Standard retail', 'Image first - visible actions', 'Detailed list-style'] },
     { key: 'rail1', group: 'Homepage product sections', title: 'Best sellers', home: true, items: ['Tabs + grid', 'Carousel with arrows', 'Feature card + grid'] },
     { key: 'rail2', group: 'Homepage product sections', title: 'Deals this week', home: true, items: ['Tabs + grid', 'Carousel with arrows', 'Deal of the day + grid'] },
     { key: 'rail3', group: 'Homepage product sections', title: 'New arrivals - furniture', home: true, items: ['Tabs + grid', 'Carousel with arrows', 'Feature card + grid'] },
@@ -180,9 +181,9 @@
   function mobileCard() { return w.matchMedia('(max-width: 991.98px)').matches ? optState.mcard : optState.card; }
   function applyOpts() { for (var k in optState) d.body.setAttribute('data-' + k, optState[k]); d.body.setAttribute('data-card', mobileCard()); if (w.history && new URLSearchParams(w.location.search).has('opt')) { try { w.history.replaceState(null, '', KV.options.url()); } catch (e) {} } }
   var PRESETS = [
-    { id: 'classic', title: 'Everyday retail', desc: 'Familiar shopping, offers up front', skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', hero: '1', cats: '1', card: '1', rail1: '1', rail2: '3', rail3: '2', footer: '1' },
-    { id: 'modern', title: 'Modern showcase', desc: 'Wide imagery and clean product rails', skin: '2', header: '2', menu: '3', mheader: '2', bottom: '2', mcard: '2', hero: '2', cats: '3', card: '2', rail1: '2', rail2: '1', rail3: '3', footer: '2' },
-    { id: 'catalogue', title: 'Catalogue first', desc: 'Quick category access and detailed cards', skin: '1', header: '3', menu: '2', mheader: '3', bottom: '3', mcard: '3', hero: '3', cats: '2', card: '3', rail1: '1', rail2: '2', rail3: '1', footer: '3' }
+    { id: 'classic', title: 'Everyday retail', desc: 'Familiar shopping, offers up front', skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', mcols: '2', hero: '1', cats: '1', card: '1', rail1: '1', rail2: '3', rail3: '2', footer: '1' },
+    { id: 'modern', title: 'Modern showcase', desc: 'Wide imagery and clean product rails', skin: '2', header: '2', menu: '3', mheader: '2', bottom: '2', mcard: '2', mcols: '1', hero: '2', cats: '3', card: '2', rail1: '2', rail2: '1', rail3: '3', footer: '2' },
+    { id: 'catalogue', title: 'Catalogue first', desc: 'Quick category access and detailed cards', skin: '1', header: '3', menu: '2', mheader: '3', bottom: '3', mcard: '3', mcols: '1', hero: '3', cats: '2', card: '3', rail1: '1', rail2: '2', rail3: '1', footer: '3' }
   ];
   KV.options = {
     presets: PRESETS,
@@ -194,7 +195,7 @@
       if (!(k in OPT_DEF) || !optOk(k, v)) return;
       optState[k] = v; save('kv-options', optState); applyOpts();
       if (k === 'header' || k === 'menu' || k === 'mheader') KV.renderHeader(); if (k === 'footer' || k === 'skin') KV.renderFooter();
-      emit('options', { key: k === 'mcard' ? 'card' : k, value: v }); KV.sync(); syncOptUi();
+      emit('options', { key: k === 'mcard' || k === 'mcols' ? 'card' : k, value: v }); KV.sync(); syncOptUi();
     },
     reset: function () { optState = JSON.parse(JSON.stringify(OPT_DEF)); save('kv-options', optState); applyOpts(); KV.renderHeader(); KV.renderFooter(); emit('options', { key: 'all', value: null }); KV.sync(); }
   };
@@ -226,9 +227,9 @@
   function saveLine(p) { var s = KV.saving(p); return s.amount ? '<span class="save-line">Save ' + KV.fmt(s.amount) + '</span>' : ''; }
   function stockLine(p) { return '<span class="stock-line ' + stockClass(p.stock) + '"><i class="fa-solid ' + (stockClass(p.stock) === 'out' ? 'fa-circle-xmark' : stockClass(p.stock) === 'low-stock' ? 'fa-circle-exclamation' : 'fa-circle-check') + '" aria-hidden="true"></i> ' + esc(p.stock) + '</span>'; }
   function actionBtns(p) {
-    return '<button type="button" class="act-btn" data-kv-wish="' + esc(p.id) + '" aria-pressed="false" aria-label="Add ' + esc(p.name) + ' to wishlist"><i class="fa-regular fa-heart" aria-hidden="true"></i></button>' +
-      '<button type="button" class="act-btn" data-kv-compare="' + esc(p.id) + '" aria-pressed="false" aria-label="Compare ' + esc(p.name) + '"><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i></button>' +
-      '<button type="button" class="act-btn" data-kv-quick="' + esc(p.id) + '" aria-label="Quick view ' + esc(p.name) + '"><i class="fa-regular fa-eye" aria-hidden="true"></i></button>';
+    return '<button type="button" class="act-btn" data-kv-wish="' + esc(p.id) + '" aria-pressed="false" aria-label="Add ' + esc(p.name) + ' to wishlist"><i class="fa-regular fa-heart" aria-hidden="true"></i><span>Save</span></button>' +
+      '<button type="button" class="act-btn" data-kv-compare="' + esc(p.id) + '" aria-pressed="false" aria-label="Compare ' + esc(p.name) + '"><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i><span>Compare</span></button>' +
+      '<button type="button" class="act-btn" data-kv-quick="' + esc(p.id) + '" aria-label="Quick view ' + esc(p.name) + '"><i class="fa-regular fa-eye" aria-hidden="true"></i><span>View</span></button>';
   }
   /* Offer timeline: p.saleEnds (ISO date) or a demo end date 1–5 days ahead for sale items */
   KV.saleEnds = function (p) {
@@ -240,7 +241,7 @@
   function endsText(ms) {
     var left = ms - Date.now(); if (left <= 0) return 'Offer ended';
     var dd = Math.floor(left / 86400000), hh = Math.floor(left % 86400000 / 3600000), mm = Math.floor(left % 3600000 / 60000);
-    return 'Offer ends in ' + (dd ? dd + 'd ' : '') + hh + 'h ' + (mm < 10 ? '0' : '') + mm + 'm';
+    return dd ? dd + 'd ' + hh + 'h left' : hh + 'h ' + mm + 'm left';
   }
   function offerLine(p) { var e = KV.saleEnds(p); return e ? '<span class="kv-offer" data-kv-ends="' + e + '"><i class="fa-regular fa-clock" aria-hidden="true"></i> <span>' + endsText(e) + '</span></span>' : ''; }
   setInterval(function () { $$('[data-kv-ends]').forEach(function (el) { var s = el.querySelector('span'); if (s) s.textContent = endsText(+el.getAttribute('data-kv-ends')); }); }, 30000);
@@ -248,13 +249,13 @@
     var opt = (o && o.opt) || d.body.getAttribute('data-card') || '1', url = KV.url(p);
     if (opt === '2') {
       return '<li class="' + liClass(p, 'card-2') + '" data-id="' + esc(p.id) + '"><div class="product-inner"><div class="product-media"><a href="' + url + '" class="woocommerce-LoopProduct-link woocommerce-loop-product__link" tabindex="-1" aria-hidden="true">' + img(p) + '</a>' + badges(p) +
-        '<div class="product-actions">' + actionBtns(p) + '</div>' + addBtn(p, 'card-add-bar') + '</div><div class="product-info"><span class="product-brand">' + esc(p.brand) + '</span><h2 class="woocommerce-loop-product__title"><a href="' + url + '">' + esc(p.name) + '</a></h2>' +
-        '<div class="rating-row">' + KV.stars(p.rating, p.reviews) + '</div>' + KV.priceBlock(p) + offerLine(p) + '</div></div></li>';
+        '</div><div class="product-info"><span class="product-brand">' + esc(p.brand) + '</span><h2 class="woocommerce-loop-product__title"><a class="kv-stretch" href="' + url + '">' + esc(p.name) + '</a></h2>' +
+        '<p class="product-keyspec">' + esc(p.keySpec) + '</p><div class="rating-row">' + KV.stars(p.rating, p.reviews) + '</div>' + KV.priceBlock(p) + offerLine(p) + '<div class="product-actions">' + actionBtns(p) + '</div>' + addBtn(p, 'card-add-bar') + '</div></div></li>';
     }
     if (opt === '3') {
       var bl = (p.bullets || []).slice(0, 3).map(function (b) { return '<li>' + esc(b) + '</li>'; }).join('');
-      return '<li class="' + liClass(p, 'card-3') + '" data-id="' + esc(p.id) + '"><div class="product-inner"><div class="product-media"><a href="' + url + '" class="woocommerce-LoopProduct-link woocommerce-loop-product__link">' + img(p) + '</a>' + badges(p) + '</div>' +
-        '<div class="product-main"><span class="product-brand">' + esc(p.brand) + ' &middot; ' + esc(p.model) + '</span><h2 class="woocommerce-loop-product__title"><a href="' + url + '">' + esc(p.name) + '</a></h2><ul class="product-bullets">' + bl + '</ul><div class="rating-row">' + KV.stars(p.rating, p.reviews) + '</div></div>' +
+      return '<li class="' + liClass(p, 'card-3') + '" data-id="' + esc(p.id) + '"><div class="product-inner"><div class="product-media"><a href="' + url + '" class="woocommerce-LoopProduct-link woocommerce-loop-product__link" tabindex="-1" aria-hidden="true">' + img(p) + '</a>' + badges(p) + '</div>' +
+        '<div class="product-main"><span class="product-brand">' + esc(p.brand) + ' &middot; ' + esc(p.model) + '</span><h2 class="woocommerce-loop-product__title"><a class="kv-stretch" href="' + url + '">' + esc(p.name) + '</a></h2><ul class="product-bullets">' + bl + '</ul><div class="rating-row">' + KV.stars(p.rating, p.reviews) + '</div></div>' +
         '<div class="product-buy">' + KV.priceBlock(p) + offerLine(p) + '<span class="delivery-line"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i> ' + esc(p.delivery || (p.price >= D.shipping.freeOver ? 'Free delivery' : 'Delivery ' + KV.fmt(D.shipping.flat))) + '</span>' + addBtn(p) +
         '<span class="buy-links"><button type="button" class="link-btn" data-kv-wish="' + esc(p.id) + '" aria-pressed="false"><i class="fa-regular fa-heart" aria-hidden="true"></i> Wishlist</button><button type="button" class="link-btn" data-kv-compare="' + esc(p.id) + '" aria-pressed="false"><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i> Compare</button></span></div></div></li>';
     }
@@ -301,17 +302,17 @@
     var mode = optState.mheader, menu = '<button class="mh-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#kv-mobile-menu" aria-controls="kv-mobile-menu" aria-label="Open menu"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>';
     var search = '<button class="mh-btn" type="button" data-kv-mobile-search aria-label="Search products"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>';
     var cart = '<a class="mh-btn hdr-cart" href="cart.html" data-kv-open-cart aria-label="Cart"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="hdr-count" data-kv-cart-count>0</span></a>';
-    return '<div class="mhead mh-style-' + mode + ' d-lg-none"><div class="mhead-row">' + menu + logo(false, 32) + '<div class="mh-right">' + (mode === '3' ? '' : search) + cart + '</div></div>' + (mode === '2' ? '' : '<div class="mhead-search">' + searchForm('m' + id, false) + '</div>') + (mode === '3' ? '<div class="mh-shortcuts"><a href="shop.html?sort=deals"><i class="fa-solid fa-tags" aria-hidden="true"></i> Deals</a><a href="easy-payment.html"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Easy Payment</a><a href="stores.html"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Stores</a></div>' : '') + '</div>';
+    return '<div class="mhead mh-style-' + mode + ' d-lg-none"><div class="mhead-row">' + menu + logo(false, 32) + '<div class="mh-right">' + (mode === '3' ? '' : search) + cart + '</div></div>' + (mode === '2' ? '' : '<div class="mhead-search">' + searchForm('m' + id, false) + '</div>') + '</div>';
   }
   var NAV1 = ['furniture', 'refrigerators', 'washing-machines', 'tv-audio', 'air-conditioners', 'kitchen-appliances', 'laptops-phones'];
   var NAV3 = ['furniture', 'refrigerators', 'tv-audio', 'air-conditioners', 'laptops-phones'];
   function navLinks(ids, cls) {
     if (optState.menu === '3') return departmentMenu();
     return ids.map(function (id) { var c = KV.category(id); return '<li><a href="shop.html?cat=' + id + '"' + (location.search.indexOf('cat=' + id) > -1 ? ' aria-current="page"' : '') + '>' + (optState.menu === '2' ? '<i class="' + c.icon + '" aria-hidden="true"></i> ' : '') + esc(c.name) + '</a></li>'; }).join('') +
-      '<li><a href="easy-payment.html"' + (page === 'easy-payment.html' ? ' aria-current="page"' : '') + '>Easy Payment</a></li><li><a class="nav-deals" href="shop.html?sort=deals">Deals</a></li>';
+      '<li><a class="nav-deals" href="shop.html?sort=deals">Deals</a></li>';
   }
   function departmentMenu() {
-    return '<li class="department-item"><button type="button" class="department-toggle" data-kv-menu-toggle aria-controls="department-panel" aria-expanded="false"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Shop departments <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="department-panel" id="department-panel" hidden><div class="department-intro"><span>Find your next everyday upgrade</span><a href="shop.html">Shop all products <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div><div class="department-layout"><div class="department-grid">' + CATS.map(function (c) { return '<a class="department-card" href="shop.html?cat=' + c.id + '"><i class="' + c.icon + '" aria-hidden="true"></i><span><strong>' + esc(c.name) + '</strong><small>' + c.count + ' products</small></span><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>'; }).join('') + '</div><aside class="department-help"><span class="department-eyebrow">Made for your home</span><h3>Big plans.<br>Manageable payments.</h3><p>Explore furniture, appliances and technology, with a payment plan that suits you.</p><a href="easy-payment.html">Explore Easy Payment <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a><a href="stores.html">Visit a showroom</a></aside></div><div class="department-shortcuts"><a href="shop.html?sort=deals"><i class="fa-solid fa-tags" aria-hidden="true"></i> Current deals</a><a href="shop.html?sort=date"><i class="fa-solid fa-star" aria-hidden="true"></i> New arrivals</a><a href="contact.html"><i class="fa-regular fa-circle-question" aria-hidden="true"></i> Need a hand choosing?</a></div></div></li><li><a href="shop.html">Shop all</a></li><li><a href="easy-payment.html">Easy Payment</a></li><li><a class="nav-deals" href="shop.html?sort=deals">Deals</a></li>';
+    return '<li class="department-item"><button type="button" class="department-toggle" data-kv-menu-toggle aria-controls="department-panel" aria-expanded="false"><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Shop departments <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="department-panel" id="department-panel" hidden><div class="department-intro"><span>Find your next everyday upgrade</span><a href="shop.html">Shop all products <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div><div class="department-layout"><div class="department-grid">' + CATS.map(function (c) { return '<a class="department-card" href="shop.html?cat=' + c.id + '"><i class="' + c.icon + '" aria-hidden="true"></i><span><strong>' + esc(c.name) + '</strong><small>' + c.count + ' products</small></span><i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>'; }).join('') + '</div><aside class="department-help"><span class="department-eyebrow">Made for your home</span><h3>Find the right fit<br>for your home.</h3><p>Explore furniture, appliances and technology for your everyday needs.</p><a href="shop.html">Explore the collection <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a><a href="stores.html">Visit a showroom</a></aside></div><div class="department-shortcuts"><a href="shop.html?sort=deals"><i class="fa-solid fa-tags" aria-hidden="true"></i> Current deals</a><a href="shop.html?sort=date"><i class="fa-solid fa-star" aria-hidden="true"></i> New arrivals</a><a href="contact.html"><i class="fa-regular fa-circle-question" aria-hidden="true"></i> Need a hand choosing?</a></div></div></li><li><a href="shop.html">Shop all</a></li><li><a class="nav-deals" href="shop.html?sort=deals">Deals</a></li>';
   }
   function catBrands(c) { var s = {}; PRODS.forEach(function (p) { if (p.category === c.id) s[p.brand] = 1; }); return Object.keys(s).slice(0, 5); }
   function header1() {
@@ -326,17 +327,17 @@
     var nav = NAV1.concat([]).map(function (id) {
       var c = KV.category(id), br = catBrands(c);
       return '<li class="has-mega"><a href="shop.html?cat=' + id + '">' + esc(c.name) + '</a><button type="button" class="category-toggle" data-kv-menu-toggle aria-label="Browse ' + esc(c.name) + '" aria-expanded="false" aria-controls="mega-' + id + '"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div class="mega" id="mega-' + id + '" hidden><div class="container mega-in"><div><h3>Shop by type</h3><ul>' + c.subs.map(function (s) { return '<li><a href="shop.html?cat=' + id + '">' + esc(s) + '</a></li>'; }).join('') + '</ul></div>' +
-        '<div><h3>Popular brands</h3><ul>' + br.map(function (b) { return '<li><a href="shop.html?cat=' + id + '&amp;brand=' + encodeURIComponent(b) + '">' + esc(b) + '</a></li>'; }).join('') + '</ul></div><div><h3>Quick links</h3><ul><li><a href="shop.html?cat=' + id + '&amp;sort=deals">Deals</a></li><li><a href="shop.html?cat=' + id + '&amp;sort=date">New arrivals</a></li><li><a href="easy-payment.html">Pay with Easy Payment</a></li><li><a href="stores.html">See it in a showroom</a></li></ul></div>' +
+        '<div><h3>Popular brands</h3><ul>' + br.map(function (b) { return '<li><a href="shop.html?cat=' + id + '&amp;brand=' + encodeURIComponent(b) + '">' + esc(b) + '</a></li>'; }).join('') + '</ul></div><div><h3>Quick links</h3><ul><li><a href="shop.html?cat=' + id + '&amp;sort=deals">Deals</a></li><li><a href="shop.html?cat=' + id + '&amp;sort=date">New arrivals</a></li><li><a href="stores.html">See it in a showroom</a></li></ul></div>' +
         '<a class="mega-promo" href="shop.html?cat=' + id + '"><img src="' + esc(c.image) + '" alt="" loading="lazy"><span>Shop ' + esc(c.name) + '</span></a></div></div></li>';
     }).join('');
-    return '<header class="kv-header hdr-2"><div class="hdr-util d-none d-lg-block"><div class="container hdr-util-row"><span>Showrooms in Colombo, Kandy, Galle and 3 more cities</span><ul><li><a href="tel:' + BR.hotlineTel + '">' + esc(BR.hotline) + '</a></li><li><a href="stores.html">Store locator</a></li><li><a href="my-account.html?tab=orders">Track order</a></li></ul></div></div>' +
-      '<div class="hdr-center d-none d-lg-block"><div class="container hdr-center-row"><div class="hc-left"><button type="button" class="hc-search-btn" data-kv-toggle-search aria-expanded="false" aria-controls="hdr2-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Search</button></div>' + logo(false, 56) + '<div class="hc-right">' + icons({ labels: true }) + '</div></div><div class="hdr2-search" id="hdr2-search" hidden><div class="container">' + searchForm('d2', true) + '</div></div></div>' +
-      '<nav class="hdr-nav2 d-none d-lg-block" aria-label="Main"><ul class="container">' + (optState.menu === '1' ? nav + '<li><a href="easy-payment.html">Easy Payment</a></li><li><a class="nav-deals" href="shop.html?sort=deals">Deals</a></li>' : navLinks(NAV1)) + '</ul></nav>' + mobileHead(2) + '</header>';
+    return '<header class="kv-header hdr-2"><div class="hdr-util d-none d-lg-block"><div class="container hdr-util-row"><span>Visit our Avissawella showroom</span><ul><li><a href="tel:' + BR.hotlineTel + '">' + esc(BR.hotline) + '</a></li><li><a href="stores.html">Store locator</a></li><li><a href="my-account.html?tab=orders">Track order</a></li></ul></div></div>' +
+      '<div class="hdr-center d-none d-lg-block"><div class="container hdr-center-row"><div class="hc-left"><button type="button" class="hc-search-btn" data-kv-toggle-search aria-expanded="false" aria-controls="hdr2-search"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i> Search</button></div>' + logo(false, 56) + '<div class="hc-right">' + icons({ labels: true, easy: true }) + '</div></div><div class="hdr2-search" id="hdr2-search" hidden><div class="container">' + searchForm('d2', true) + '</div></div></div>' +
+      '<nav class="hdr-nav2 d-none d-lg-block" aria-label="Main"><ul class="container">' + (optState.menu === '1' ? nav + '<li><a class="nav-deals" href="shop.html?sort=deals">Deals</a></li>' : navLinks(NAV1)) + '</ul></nav>' + mobileHead(2) + '</header>';
   }
   function header3() {
     var off = load('kv-announce-off', 0);
     return '<header class="kv-header hdr-3">' + (off ? '' : '<div class="hdr-announce"><div class="container hdr-announce-row"><p>Up to 15% off furniture this week. Free delivery in Colombo over Rs 50,000. <a href="shop.html?sort=deals">See deals</a></p><button type="button" data-kv-dismiss-announce aria-label="Dismiss announcement"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div></div>') +
-      '<div class="hdr-row3 d-none d-lg-block"><div class="container hdr-row3-in">' + logo(false, 44) + '<nav aria-label="Main"><ul class="nav-list">' + navLinks(NAV3) + '</ul></nav><div class="hdr3-search">' + searchForm('d3', false) + '</div>' + icons({}) + '</div></div>' + mobileHead(3) + '</header>';
+      '<div class="hdr-row3 d-none d-lg-block"><div class="container hdr-row3-in">' + logo(false, 44) + '<nav aria-label="Main"><ul class="nav-list">' + navLinks(NAV3) + '</ul></nav><div class="hdr3-search">' + searchForm('d3', false) + '</div>' + icons({ easy: true }) + '</div></div>' + mobileHead(3) + '</header>';
   }
   KV.renderHeader = function () {
     var host = $('#site-header'); if (!host) return;
@@ -348,8 +349,8 @@
   function footerCols() {
     return {
       shop: CATS.slice(0, 7).map(function (c) { return '<li><a href="shop.html?cat=' + c.id + '">' + esc(c.name) + '</a></li>'; }).join(''),
-      help: '<li><a href="my-account.html?tab=orders">Track your order</a></li><li><a href="policies.html#delivery">Delivery &amp; installation</a></li><li><a href="policies.html#returns">Returns &amp; refunds</a></li><li><a href="policies.html#warranty">Warranty</a></li><li><a href="easy-payment.html">Easy Payment</a></li><li><a href="contact.html">Contact us</a></li>',
-      company: '<li><a href="about.html">About us</a></li><li><a href="stores.html">Showrooms</a></li><li><a href="policies.html#privacy">Privacy policy</a></li><li><a href="policies.html#terms">Terms &amp; conditions</a></li><li><a href="policies.html#easy-payment">Easy Payment terms</a></li>'
+      help: '<li><a href="my-account.html?tab=orders">Track your order</a></li><li><a href="policies.html#delivery">Delivery &amp; installation</a></li><li><a href="policies.html#returns">Returns &amp; refunds</a></li><li><a href="policies.html#warranty">Warranty</a></li><li><a href="contact.html">Contact us</a></li>',
+      company: '<li><a href="about.html">About us</a></li><li><a href="stores.html">Our showroom</a></li><li><a href="policies.html#privacy">Privacy policy</a></li><li><a href="policies.html#terms">Terms &amp; conditions</a></li><li><a href="policies.html#easy-payment">Easy Payment terms</a></li>'
     };
   }
   function news(id) { return '<form class="kv-news" data-kv-news><label for="nl-' + id + '">Email for offers and new arrivals</label><div><input id="nl-' + id + '" type="email" required placeholder="Your email address" autocomplete="email"><button type="submit" class="button">Subscribe</button></div><p class="news-msg" role="status" hidden>Preview saved. Email subscriptions will be connected for the live store.</p></form>'; }
@@ -358,17 +359,17 @@
     var c = footerCols();
     return '<footer class="kv-footer ft-1"><div class="container ft-grid"><div class="ft-about">' + logo(true, 44) + '<p>' + esc(BR.company) + '. Home and office furniture, appliances and electronics, with Easy Payment monthly instalments.</p><address><i class="fa-solid fa-location-dot" aria-hidden="true"></i> ' + esc(BR.address) + '<br><i class="fa-solid fa-phone" aria-hidden="true"></i> <a href="tel:' + BR.hotlineTel + '">' + esc(BR.hotline) + '</a><br><i class="fa-brands fa-whatsapp" aria-hidden="true"></i> WhatsApp ' + esc(BR.whatsappDisplay) + '<br><i class="fa-regular fa-envelope" aria-hidden="true"></i> <a href="mailto:' + BR.email + '">' + esc(BR.email) + '</a><br><i class="fa-regular fa-clock" aria-hidden="true"></i> ' + esc(BR.hours) + '</address></div>' +
       '<nav aria-label="Shop"><h2>Shop</h2><ul>' + c.shop + '</ul></nav><nav aria-label="Customer service"><h2>Customer service</h2><ul>' + c.help + '</ul></nav><div><h2>Stay in touch</h2>' + news('f1') + social() + '</div></div>' +
-      '<div class="ft-bottom"><div class="container ft-bottom-row"><p>&copy; 2026 ' + esc(BR.company) + '. Prices include VAT where applicable. Online prices may differ in showrooms.</p>' + KV.payments() + '</div></div></footer>';
+      '<div class="ft-bottom"><div class="container ft-bottom-row"><p>&copy; 2026 ' + esc(BR.company) + '. Prices include VAT where applicable. Online prices may differ in our showroom.</p>' + KV.payments() + '</div></div></footer>';
   }
   function footer2() {
     var c = footerCols();
-    return '<footer class="kv-footer ft-2"><div class="ft-usp"><div class="container ft-usp-row"><div><i class="fa-solid fa-truck-fast" aria-hidden="true"></i><p><strong>Island-wide delivery</strong>Free in Colombo over Rs 50,000</p></div><div><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><p><strong>Manufacturer warranty</strong>Genuine local warranty</p></div><div><i class="fa-solid fa-calendar-check" aria-hidden="true"></i><p><strong>Easy Payment</strong>Monthly instalments up to 36 months</p></div><div><i class="fa-solid fa-store" aria-hidden="true"></i><p><strong>6 showrooms</strong>See and test before you buy</p></div></div></div>' +
+    return '<footer class="kv-footer ft-2"><div class="ft-usp"><div class="container ft-usp-row"><div><i class="fa-solid fa-truck-fast" aria-hidden="true"></i><p><strong>Island-wide delivery</strong>Free in Colombo over Rs 50,000</p></div><div><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><p><strong>Manufacturer warranty</strong>Genuine local warranty</p></div><div><i class="fa-solid fa-calendar-check" aria-hidden="true"></i><p><strong>Easy Payment</strong>Monthly instalments up to 36 months</p></div><div><i class="fa-solid fa-store" aria-hidden="true"></i><p><strong>Visit our showroom</strong>See and test before you buy</p></div></div></div>' +
       '<div class="container ft-grid5"><div class="ft-about">' + logo(optState.skin === '2', 44) + '<p>' + esc(BR.address) + '<br>Hotline <a href="tel:' + BR.hotlineTel + '">' + esc(BR.hotline) + '</a><br><a href="mailto:' + BR.email + '">' + esc(BR.email) + '</a></p>' + social() + '</div>' +
       '<nav aria-label="Shop"><h2>Shop</h2><ul>' + c.shop + '</ul></nav><nav aria-label="Customer service"><h2>Customer service</h2><ul>' + c.help + '</ul></nav><nav aria-label="Company"><h2>Company</h2><ul>' + c.company + '</ul></nav><div><h2>Newsletter</h2>' + news('f2') + '</div></div>' +
       '<div class="ft-bottom"><div class="container ft-bottom-row"><p>&copy; 2026 ' + esc(BR.company) + '</p>' + KV.payments() + '</div></div></footer>';
   }
   function footer3() {
-    return '<footer class="kv-footer ft-3"><div class="container">' + logo(optState.skin === '2', 48) + '<ul class="ft3-links"><li><a href="shop.html">Shop</a></li><li><a href="easy-payment.html">Easy Payment</a></li><li><a href="stores.html">Showrooms</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li><li><a href="policies.html#delivery">Delivery</a></li><li><a href="policies.html#returns">Returns</a></li><li><a href="policies.html#privacy">Privacy</a></li><li><a href="policies.html#terms">Terms</a></li></ul>' + social() + KV.payments() + '<p class="ft3-copy">&copy; 2026 ' + esc(BR.company) + ' &middot; ' + esc(BR.address) + ' &middot; <a href="tel:' + BR.hotlineTel + '">' + esc(BR.hotline) + '</a></p></div></footer>';
+    return '<footer class="kv-footer ft-3"><div class="container">' + logo(optState.skin === '2', 48) + '<ul class="ft3-links"><li><a href="shop.html">Shop</a></li><li><a href="stores.html">Our showroom</a></li><li><a href="about.html">About</a></li><li><a href="contact.html">Contact</a></li><li><a href="policies.html#delivery">Delivery</a></li><li><a href="policies.html#returns">Returns</a></li><li><a href="policies.html#privacy">Privacy</a></li><li><a href="policies.html#terms">Terms</a></li></ul>' + social() + KV.payments() + '<p class="ft3-copy">&copy; 2026 ' + esc(BR.company) + ' &middot; ' + esc(BR.address) + ' &middot; <a href="tel:' + BR.hotlineTel + '">' + esc(BR.hotline) + '</a></p></div></footer>';
   }
   KV.renderFooter = function () {
     var host = $('#site-footer'); if (!host) return;
@@ -407,17 +408,22 @@
       return '<div class="mm-item"><button class="mm-btn collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mm-' + i + '" aria-expanded="false" aria-controls="mm-' + i + '"><span><i class="' + c.icon + '" aria-hidden="true"></i> ' + esc(c.name) + '</span><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><div id="mm-' + i + '" class="collapse"><ul><li><a href="shop.html?cat=' + c.id + '">All ' + esc(c.name) + '</a></li>' + c.subs.map(function (s) { return '<li><a href="shop.html?cat=' + c.id + '">' + esc(s) + '</a></li>'; }).join('') + '</ul></div></div>';
     }).join('');
     var presets = '<section class="opt-presets" aria-labelledby="opt-presets-title"><h3 id="opt-presets-title">Start with a complete look</h3><p>Try a combination, then fine-tune any option below.</p><div class="opt-preset-grid">' + PRESETS.map(function (p) { return '<button type="button" class="opt-preset" data-kv-preset="' + p.id + '" aria-pressed="false"><span class="preset-sketch preset-' + p.id + '" aria-hidden="true"><b></b><i></i><em></em></span><strong>' + p.title + '</strong><small>' + p.desc + '</small></button>'; }).join('') + '</div></section>';
-    var lastGrp = '';
-    var opts = OPT_META.map(function (g) {
-      var gh = g.group && g.group !== lastGrp ? '<h3 class="opt-gh" data-opt-home="' + g.home + '">' + g.group + '</h3>' : ''; lastGrp = g.group || '';
-      return gh + '<fieldset class="opt-group" data-opt-home="' + g.home + '"><legend>' + g.title + '</legend>' + g.items.map(function (t, i) { return '<label class="opt-radio"><input type="radio" name="opt-' + g.key + '" value="' + (i + 1) + '" data-kv-opt="' + g.key + '"><span><i class="opt-mini opt-mini-' + g.key + ' opt-mini-' + (i + 1) + '" aria-hidden="true"><b></b><b></b><b></b></i><strong>' + (i + 1) + '</strong> ' + t + '</span></label>'; }).join('') + '</fieldset>';
-    }).join('');
+    function optionFields(groups) {
+      var lastGrp = '';
+      return groups.map(function (g) {
+        var gh = g.group && g.group !== lastGrp ? '<h3 class="opt-gh" data-opt-home="' + g.home + '">' + g.group + '</h3>' : ''; lastGrp = g.group || '';
+        return gh + '<fieldset class="opt-group" data-opt-home="' + g.home + '"><legend>' + g.title + '</legend>' + g.items.map(function (t, i) { return '<label class="opt-radio"><input type="radio" name="opt-' + g.key + '" value="' + (i + 1) + '" data-kv-opt="' + g.key + '"><span><i class="opt-mini opt-mini-' + g.key + ' opt-mini-' + (i + 1) + '" aria-hidden="true"><b></b><b></b><b></b></i><strong>' + (i + 1) + '</strong> ' + t + '</span></label>'; }).join('') + '</fieldset>';
+      }).join('');
+    }
+    var desktopKeys = ['header', 'menu', 'card'], mobileKeys = ['mheader', 'bottom', 'mcard', 'mcols'];
+    var deviceTabs = '<div class="opt-device-tabs" role="tablist" aria-label="Device options"><button type="button" role="tab" id="opt-tab-desktop" aria-controls="opt-panel-desktop" data-kv-device="desktop"><i class="fa-solid fa-desktop" aria-hidden="true"></i> Desktop</button><button type="button" role="tab" id="opt-tab-mobile" aria-controls="opt-panel-mobile" data-kv-device="mobile"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> Mobile</button></div>';
+    var opts = deviceTabs + '<div role="tabpanel" id="opt-panel-desktop" aria-labelledby="opt-tab-desktop">' + optionFields(OPT_META.filter(function (g) { return desktopKeys.indexOf(g.key) > -1; })) + '</div><div role="tabpanel" id="opt-panel-mobile" aria-labelledby="opt-tab-mobile">' + optionFields(OPT_META.filter(function (g) { return mobileKeys.indexOf(g.key) > -1; })) + '</div><section class="opt-shared"><h3>Shared appearance</h3><p>These choices apply to desktop and mobile.</p>' + optionFields(OPT_META.filter(function (g) { return desktopKeys.indexOf(g.key) < 0 && mobileKeys.indexOf(g.key) < 0; })) + '</section>';
     wrap.innerHTML = '<a class="kv-skip" href="#primary">Skip to content</a>' +
       '<div class="kv-notices" aria-live="polite"></div>' +
       '<div class="offcanvas offcanvas-end kv-drawer" id="kv-cart-drawer" tabindex="-1" aria-labelledby="kv-cart-title"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-cart-title">Your cart <span id="kv-cart-count"></span></h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close cart"></button></div><div class="offcanvas-body" id="kv-cart-body"></div></div>' +
       '<div class="offcanvas offcanvas-start kv-drawer" id="kv-mobile-menu" tabindex="-1" aria-labelledby="kv-mm-title"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-mm-title">Menu</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close menu"></button></div><div class="offcanvas-body p-0"><div class="mm-links"><a href="easy-payment.html"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Easy Payment</a><a class="nav-deals" href="shop.html?sort=deals"><i class="fa-solid fa-tags" aria-hidden="true"></i> Deals</a></div><h3 class="mm-title">Shop by category</h3>' + acc + '<div class="mm-links"><a href="stores.html">Store locator</a><a href="my-account.html?tab=orders">Track order</a><a href="my-account.html">My account</a><a href="contact.html">Contact us</a><a href="tel:' + BR.hotlineTel + '"><i class="fa-solid fa-phone" aria-hidden="true"></i> ' + esc(BR.hotline) + '</a></div></div></div>' +
       '<button type="button" class="kv-opt-fab" aria-label="Theme options" data-bs-toggle="offcanvas" data-bs-target="#kv-options" aria-controls="kv-options"><i class="fa-solid fa-gear" aria-hidden="true"></i><span>Theme options</span></button>' +
-      '<div class="offcanvas offcanvas-start kv-drawer" id="kv-options" tabindex="-1" aria-labelledby="kv-opt-title" data-bs-scroll="true" data-bs-backdrop="false" data-bs-keyboard="true"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-opt-title">Theme options</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close theme options"></button></div><div class="offcanvas-body"><p class="opt-note">Explore the client presentation. Every choice updates the store and stays saved in this browser.</p>' + presets + '<div class="opt-share"><label for="kv-preview-url">Your selected design</label><div><input id="kv-preview-url" type="url" readonly aria-label="Preview link"><button type="button" class="button" data-kv-copy>Copy link</button></div><p id="kv-copy-status" role="status"></p><a href="index.html" data-kv-preview-home>Preview these choices on the homepage</a></div>' + opts + '<button type="button" class="button btn-kv-outline" data-kv-opt-reset>Reset to defaults</button></div></div>' +
+      '<div class="offcanvas offcanvas-start kv-drawer" id="kv-options" tabindex="-1" aria-labelledby="kv-opt-title" data-bs-scroll="true" data-bs-backdrop="false" data-bs-keyboard="true"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-opt-title">Theme options</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close theme options"></button></div><div class="offcanvas-body"><p class="opt-note">Explore the client presentation. Every choice updates the store and stays saved in this browser.</p>' + opts + presets + '<div class="opt-share"><label for="kv-preview-url">Your selected design</label><div><input id="kv-preview-url" type="url" readonly aria-label="Preview link"><button type="button" class="button" data-kv-copy>Copy link</button></div><p id="kv-copy-status" role="status"></p><a href="index.html" data-kv-preview-home>Preview these choices on the homepage</a></div><button type="button" class="button btn-kv-outline" data-kv-opt-reset>Reset to defaults</button></div></div>' +
       '<a class="kv-wa" href="https://wa.me/' + BR.whatsapp + '" aria-label="Chat on WhatsApp" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></a>' +
       '<div class="kv-compare-bar" hidden><div class="container cmp-row"><ul class="cmp-thumbs"></ul><div class="cmp-actions"><button type="button" class="button alt" data-kv-compare-open>Compare (<span class="cmp-n">0</span>)</button><button type="button" class="link-btn" data-kv-compare-clear>Clear</button></div></div></div>' +
       '<div class="offcanvas offcanvas-end kv-drawer kv-drawer-wide" id="kv-compare-drawer" tabindex="-1" aria-labelledby="kv-cmp-title"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-cmp-title">Compare products</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button></div><div class="offcanvas-body" id="kv-compare-body"></div></div>' +
@@ -440,7 +446,10 @@
       }
     });
   }
+  var optDevice = w.matchMedia('(max-width: 991.98px)').matches ? 'mobile' : 'desktop';
   function syncOptUi() {
+    $$('[data-kv-device]').forEach(function (tab) { var active = tab.dataset.kvDevice === optDevice; tab.setAttribute('aria-selected', active); tab.tabIndex = active ? 0 : -1; });
+    ['desktop', 'mobile'].forEach(function (device) { var panel = $('#opt-panel-' + device); if (panel) panel.hidden = device !== optDevice; });
     var home = d.body.classList.contains('home');
     $$('.opt-group, .opt-gh').forEach(function (g) { g.hidden = g.getAttribute('data-opt-home') === 'true' && !home; });
     $$('[data-kv-opt]').forEach(function (r) { r.checked = optState[r.getAttribute('data-kv-opt')] === r.value; });
@@ -522,6 +531,7 @@
   function bindEvents() {
     d.addEventListener('click', function (e) {
       var t = e.target, el;
+      if ((el = t.closest('[data-kv-device]'))) { optDevice = el.dataset.kvDevice; syncOptUi(); return; }
       if ((el = t.closest('[data-kv-mobile-search]'))) { searchTrigger = el; if (w.bootstrap) w.bootstrap.Modal.getOrCreateInstance($('#kv-search-modal')).show(); return; }
       if ((el = t.closest('[data-kv-menu-toggle]'))) { var expanded = el.getAttribute('aria-expanded') === 'true'; closeNavMenus(false); if (!expanded) { el.setAttribute('aria-expanded', 'true'); d.getElementById(el.getAttribute('aria-controls')).hidden = false; } return; }
       if (!t.closest('.department-item, .has-mega')) closeNavMenus(false);
@@ -565,7 +575,7 @@
       box.innerHTML = m.length ? m.map(function (p) { return '<li><a href="' + KV.url(p) + '"><img src="' + esc(p.images[0]) + '" alt="" width="40" height="40"><span>' + esc(p.name) + '</span><b>' + KV.fmt(p.price) + '</b></a></li>'; }).join('') : '<li class="none">No products found</li>';
       box.hidden = false;
     });
-    d.addEventListener('keydown', function (e) { if (e.key === 'Escape') { var searchDialog = $('#kv-search-modal.show'); if (searchDialog && w.bootstrap) w.bootstrap.Modal.getOrCreateInstance(searchDialog).hide(); closeNavMenus(true); $$('.kv-suggest').forEach(function (u) { u.hidden = true; }); $$('.allcats.is-open').forEach(function (c) { c.classList.remove('is-open'); var b = $('[data-kv-categories]', c); b.setAttribute('aria-expanded', 'false'); b.focus(); }); } });
+    d.addEventListener('keydown', function (e) { var tab = e.target.closest && e.target.closest('[data-kv-device]'); if (tab && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].indexOf(e.key) > -1) { e.preventDefault(); optDevice = e.key === 'Home' ? 'desktop' : e.key === 'End' ? 'mobile' : optDevice === 'desktop' ? 'mobile' : 'desktop'; syncOptUi(); $('[data-kv-device="' + optDevice + '"]').focus(); return; } if (e.key === 'Escape') { var searchDialog = $('#kv-search-modal.show'); if (searchDialog && w.bootstrap) w.bootstrap.Modal.getOrCreateInstance(searchDialog).hide(); closeNavMenus(true); $$('.kv-suggest').forEach(function (u) { u.hidden = true; }); $$('.allcats.is-open').forEach(function (c) { c.classList.remove('is-open'); var b = $('[data-kv-categories]', c); b.setAttribute('aria-expanded', 'false'); b.focus(); }); } });
     w.addEventListener('kv:cart', function () { KV.sync(); renderCart(); });
     w.addEventListener('kv:wishlist', KV.sync);
     w.addEventListener('kv:compare', function () { KV.sync(); renderCompareBar(); if ($('#kv-compare-drawer.show')) renderCompareDrawer(); });
