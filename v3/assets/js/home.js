@@ -54,9 +54,10 @@
       h = head(r, '<span class="rail-arrows"><button type="button" data-scroll="-1" aria-label="Scroll left"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button><button type="button" data-scroll="1" aria-label="Scroll right"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button></span>') +
         '<div class="rail-carousel"><div class="rail-track" tabindex="0" role="group" aria-label="' + esc(r.title) + '">' + KV.grid(all.slice(0, 10), { cls: 'rail-list' }) + '</div></div>';
     } else if (o === '3') {
-      var f = all[0], rest = all.slice(1, 5);
+      var featured = all.slice(0, 2), rest = all.slice(featured.length, featured.length + 6);
+      var picks = KV.grid(featured, { cols: 1, cls: 'featured-products' });
       h = head(r, r.deal ? '<span class="deal-timer-wrap">Ends in <span class="deal-timer" data-end></span></span>' : '') +
-        '<div class="rail-deal"><article class="deal-feature"><span class="deal-flag">' + (r.deal ? 'Deal of the day' : 'Top pick') + '</span><a href="' + KV.url(f) + '" class="df-img"><img src="' + esc(f.images[0]) + '" alt="' + esc(f.name) + '"></a><div class="df-info"><span class="product-brand">' + esc(f.brand) + '</span><h3><a class="kv-stretch" href="' + KV.url(f) + '">' + esc(f.name) + '</a></h3><p class="product-keyspec">' + esc(f.keySpec) + '</p>' + KV.priceBlock(f) + (KV.saving(f).amount ? '<span class="save-line">Save ' + KV.fmt(KV.saving(f).amount) + '</span>' : '') + (KV.easyMonthly(f) ? '<span class="easy-line"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Easy Payment: <strong>' + KV.fmt(KV.easyMonthly(f)) + '</strong> x 12 months</span>' : '') + '<a class="button alt add_to_cart_button" href="?add-to-cart=' + esc(f.id) + '" data-kv-add="' + esc(f.id) + '">Add to cart</a></div></article>' + KV.grid(rest, { cols: 2, cls: 'deal-grid' }) + '</div>';
+        '<div class="rail-deal' + (rest.length ? '' : ' rail-feature-only') + '"><div class="rail-feature-stack" role="group" aria-labelledby="' + r.id + '-featured-title"><h3 class="rail-feature-title" id="' + r.id + '-featured-title">' + (r.deal ? 'Featured deals' : 'Top picks') + '</h3>' + picks + '</div>' + (rest.length ? KV.grid(rest, { cols: 3, cls: 'deal-grid' }) : '') + '</div>';
     } else {
       h = head(r) + '<div class="kv-tabs" role="tablist" aria-label="' + esc(r.title) + '">' + r.tabs.map(function (t, i) { return '<button type="button" role="tab" tabindex="' + (i ? '-1' : '0') + '" class="kv-tab" aria-selected="' + (i === 0) + '" data-tab="' + i + '">' + esc(t.l) + '</button>'; }).join('') + '</div><div class="rail-panel" role="tabpanel">' + KV.grid(all.slice(0, 8), { cols: 4 }) + '</div>';
     }
@@ -134,7 +135,7 @@
 
   function showroom() {
     var sel = $('#sr-sel'), card = $('#sr-card'); if (!sel) return;
-    sel.hidden = D.stores.length < 2;
+    sel.hidden = D.stores.length < 2; if (D.stores.length < 2) { var label = d.querySelector('label[for="sr-sel"]'); if (label) label.hidden = true; }
     sel.innerHTML = D.stores.map(function (s, i) { return '<option value="' + i + '">' + esc(s.name) + '</option>'; }).join('');
     function show() { var s = D.stores[+sel.value]; card.innerHTML = '<strong>' + esc(s.name) + '</strong><br>' + esc(s.address) + '<br>' + esc(s.hours) + '<br><a href="tel:' + s.phone.replace(/\s/g, '') + '">' + esc(s.phone) + '</a>'; }
     sel.addEventListener('change', show); show();

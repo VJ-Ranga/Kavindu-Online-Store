@@ -3,11 +3,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
-function runtime(initial={},mobile=true) {
+function runtime(initial={},mobile=true,route='index.html') {
   const store = new Map(Object.entries(initial));
   const attrs={};
   const document={readyState:'loading',body:{classList:{contains:()=>false},getAttribute:k=>attrs[k],setAttribute:(k,v)=>attrs[k]=v},addEventListener(){},querySelector(){return null;},querySelectorAll(){return [];}};
-  const window={document,location:{search:'',pathname:'/v3/index.html',href:'https://example.test/v3/index.html'},dispatchEvent(){},addEventListener(){},matchMedia:()=>({matches:mobile})};
+  const window={document,location:{search:'',pathname:'/v3/'+route,href:'https://example.test/v3/'+route},dispatchEvent(){},addEventListener(){},matchMedia:()=>({matches:mobile})};
   const ctx={window,document,location:window.location,localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)},URL,URLSearchParams,CustomEvent:class{},setInterval(){},clearInterval(){},setTimeout(){},console};
   vm.createContext(ctx);
   for(const file of ['data.js','theme.js']) vm.runInContext(fs.readFileSync(path.join(__dirname,'../v3/assets/js',file),'utf8'),ctx);
@@ -37,17 +37,17 @@ test('saved carts ignore missing products and invalid quantities',()=>{
 test('preview links contain the entire selection and preserve page filters',()=>{
  const kv=runtime().KV;kv.options.set('skin','2');kv.options.set('header','3');
  const u=new URL(kv.options.url('https://example.test/v3/shop.html?cat=furniture'));
- assert.equal(u.searchParams.get('cat'),'furniture');assert.match(u.searchParams.get('opt'),/skin-2/);assert.match(u.searchParams.get('opt'),/header-3/);assert.match(u.searchParams.get('opt'),/footer-1/);
+ assert.equal(u.searchParams.get('cat'),'furniture');assert.match(u.searchParams.get('opt'),/skin-2/);assert.match(u.searchParams.get('opt'),/header-1/);assert.match(u.searchParams.get('opt'),/footer-1/);
 });
 test('ready-made combinations retain individual controls',()=>{
  const kv=runtime().KV;assert.equal(kv.options.presets.length,3);kv.options.preset('modern');assert.equal(kv.options.get().skin,'2');kv.options.set('hero','3');assert.equal(kv.options.get().hero,'3');
 });
 test('navigation variants can be shared, restored, and reset independently',()=>{
- const kv=runtime().KV;kv.options.set('menu','3');kv.options.set('header','3');
- assert.equal(kv.options.get().menu,'3');assert.match(kv.options.url(),/menu-3/);
+ const kv=runtime().KV;kv.options.set('menu','2');kv.options.set('header','3');
+ assert.equal(kv.options.get().menu,'2');assert.match(kv.options.url(),/menu-2/);
  const restored=runtime({'kv-options':JSON.stringify(kv.options.get())}).KV;
- assert.equal(restored.options.get().menu,'3');restored.options.reset();assert.equal(restored.options.get().menu,'1');
- for(const preset of kv.options.presets) {kv.options.preset(preset.id);assert.ok(['1','2','3'].includes(kv.options.get().menu));}
+ assert.equal(restored.options.get().menu,'2');restored.options.reset();assert.equal(restored.options.get().menu,'1');
+ for(const preset of kv.options.presets) {kv.options.preset(preset.id);assert.ok(['1','2'].includes(kv.options.get().menu));}
 });
 test('mobile presentation choices persist independently and are included in preview links',()=>{
  const kv=runtime().KV;kv.options.set('header','1');kv.options.set('card','3');
@@ -76,4 +76,36 @@ test('every product card exposes a native stretched product link and separate ca
 test('mobile column count is independent, validated and included in shared selections',()=>{
  const kv=runtime().KV;kv.options.set('mcard','2');kv.options.set('mcols','1');assert.equal(kv.options.get().mcols,'1');assert.equal(kv.options.get().mcard,'2');assert.match(kv.options.url(),/mcols-1/);kv.options.set('mcols','3');assert.equal(kv.options.get().mcols,'1');
  const restored=runtime({'kv-options':JSON.stringify(kv.options.get())}).KV;assert.equal(restored.options.get().mcols,'1');kv.options.preset('modern');assert.equal(kv.options.get().mcols,'1');kv.options.reset();assert.equal(kv.options.get().mcols,'2');
+});
+
+test('bottom Shop and Deals state follows the current catalogue ordering',()=>{
+ const w=runtime({},true,'shop.html');
+ function link(href) {const attrs={href};return {attrs,active:false,getAttribute:k=>attrs[k],setAttribute:(k,v)=>attrs[k]=v,removeAttribute:k=>delete attrs[k],classList:{toggle(k,v){attrs.active=v;}}};}
+ const shop=link('shop.html'),deals=link('shop.html?sort=deals');
+ w.document.querySelectorAll=s=>s.startsWith('.kv-bottombar a')?[shop,deals]:[];
+ w.location.search='?sort=deals';w.KV.sync();assert.equal(deals.attrs['aria-current'],'page');assert.equal(shop.attrs['aria-current'],undefined);
+ w.location.search='?sort=price';w.KV.sync();assert.equal(shop.attrs['aria-current'],'page');assert.equal(deals.attrs['aria-current'],undefined);
+});
+test('modern preset keeps the complete retail header and icon submenus',()=>{
+ const kv=runtime().KV;kv.options.preset('modern');assert.equal(kv.options.get().header,'1');assert.equal(kv.options.get().menu,'2');
+});
+test('all header/menu choices retain catalogue destinations and useful submenus',()=>{
+ const w=runtime(),host={innerHTML:'',setAttribute(){}};w.document.querySelector=s=>s==='#site-header'?host:null;
+ for(const header of ['1'])for(const menu of ['1','2']){
+  w.KV.options.set('header',header);w.KV.options.set('menu',menu);
+  for(const category of w.KV_DATA.categories)assert.ok(host.innerHTML.includes('shop.html?cat='+category.id),header+'/'+menu+'/'+category.id);
+  assert.match(host.innerHTML,/data-kv-menu-parent/);assert.match(host.innerHTML,/>Sofas</);assert.doesNotMatch(host.innerHTML,/department-panel|mega-promo|catalog-quick|Shop by brand/);
+ }
+});
+
+test('desktop header is limited to Retail, including saved selections and presets',()=>{
+ const kv=runtime({'kv-options':JSON.stringify({header:'3',mheader:'2'})}).KV;
+ assert.equal(kv.options.get().header,'1');assert.equal(kv.options.get().mheader,'2');
+ kv.options.set('header','2');assert.equal(kv.options.get().header,'1');
+ for(const preset of kv.options.presets){kv.options.preset(preset.id);assert.equal(kv.options.get().header,'1');}
+});
+
+test('removed compact icon menu restores as the remaining category icon menu',()=>{
+ const kv=runtime({'kv-options':JSON.stringify({menu:'3'})}).KV;
+ assert.equal(kv.options.get().menu,'2');kv.options.set('menu','3');assert.equal(kv.options.get().menu,'2');assert.doesNotMatch(kv.options.url(),/menu-3/);
 });

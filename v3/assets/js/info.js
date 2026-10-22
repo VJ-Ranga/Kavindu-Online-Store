@@ -14,6 +14,7 @@
     var list = $('#store-list'); if (!list) return;
     var stores = (D.stores || []).map(function (s) { return Object.assign({ district: DISTRICT[s.name] || '' }, s); });
     var sel = $('#sf-district'), q = $('#sf-q'), count = $('#sf-count'), map = $('#store-map'), cap = $('#store-map-cap');
+    if (stores.length === 1) $('#store-filter').hidden = true;
     var districts = stores.map(function (s) { return s.district; }).filter(function (v, i, a) { return v && a.indexOf(v) === i; }).sort();
     districts.forEach(function (n) { var o = d.createElement('option'); o.value = n; o.textContent = n; sel.appendChild(o); });
     var active = -1;

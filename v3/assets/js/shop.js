@@ -104,7 +104,7 @@
       pg += '</ul>';
     }
     $('#shop-pages').innerHTML = pg;
-    KV.sync && KV.sync(); push();
+    push(); KV.sync && KV.sync();
   }
   function refresh(keepFilters) { if (!keepFilters) buildFilters(); render(); }
 

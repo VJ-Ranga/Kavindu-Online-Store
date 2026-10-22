@@ -7,7 +7,7 @@
   var SHIP = [
     { id: 'standard', title: 'Standard delivery (islandwide)', note: '3-5 working days. Free over Rs 50,000.' },
     { id: 'express', title: 'Colombo express delivery', note: 'Next working day, Colombo district only.' },
-    { id: 'pickup', title: 'Showroom pickup', note: 'Free. Collect from any showroom in 2 working days.' }
+    { id: 'pickup', title: 'Showroom pickup', note: 'Free. Collect from our Avissawella showroom in 2 working days.' }
   ];
   function ship(id) { return id === 'express' ? 2500 : id === 'pickup' ? 0 : KV.cart.shippingFee(); }
   function getShip() { var s = KV.load('kv-ship', 'standard'); return SHIP.some(function (x) { return x.id === s; }) ? s : 'standard'; }
@@ -79,6 +79,13 @@
     if (!code) { notice('Please enter a coupon code.', 'error'); return; }
     if (!COUPONS[code]) { notice('Coupon &ldquo;' + KV.esc(code.toLowerCase()) + '&rdquo; does not exist!', 'error'); return; }
     KV.save('kv-coupon', code); render(); notice('Coupon code applied successfully.', 'message');
+  });
+  w.addEventListener('kv:options', function (e) {
+    if (e.detail.key !== 'card' && e.detail.key !== 'all') return;
+    var host = root.querySelector('.cross-sells ul.products');
+    if (!host) return;
+    var products = Array.prototype.map.call(host.children, function (li) { return KV.product(li.getAttribute('data-id')); }).filter(Boolean);
+    host.outerHTML = KV.grid(products, { cols: 4 }); KV.sync();
   });
   w.addEventListener('kv:cart', function (e) { render(); });
   KV.ready(function () {

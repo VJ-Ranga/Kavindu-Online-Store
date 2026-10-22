@@ -89,3 +89,36 @@ Verified full-card navigation across all three styles at375px and1440px, a homep
 
 ### Card presentation audit
 See `CARD-AUDIT.md` for findings, research sources, the contained labeled action toolbar, independent one/two-column mobile setting, larger images and repaired catalogue List view. All54 sampled catalogue/homepage combinations passed overflow/toolbar checks;14 runtime tests passed. Asset version29.
+
+
+### Full desktop/mobile UI audit
+See `UI-UX-AUDIT.md` for the complete finishing pass and evidence. Mobile navigation is now Shop, Search, Deals, Account with one top-right Cart. Login/register columns, product CTA order, cart cross-sell option refresh, card/section density, consistent shapes/icons, mobile service/guide grids and bottom overlay clearance were corrected. Shared overrides live in `v3/assets/css/polish.css`. Final42 page/viewport samples and30 option-family samples passed the measured checks;15 runtime tests pass. Asset version33. Changes remain local.
+
+
+### Featured-rail balance correction
+Replaced the single double-height highlighted product with two distinct featured picks stacked beside four regular products. Images have a bounded aspect ratio; the old image-stretch rule is removed. The feature cards remain fully clickable with independent cart buttons. Mobile follows the chosen one/two-column setting. Verified30 skin/card/viewport/column samples: each featured section has two featured products plus four distinct regular products, with no duplicates, document overflow or clipped feature content. All15 runtime tests still pass. Asset version34. Screenshot: workspace `review/two-featured-products.jpg`.
+
+
+### Shared-card highlight (replaces the separate featured-card design)
+The highlighted column now calls the same `KV.grid` / `KV.card` renderer as the remaining products. There are still only three selectable product-card styles, with independent desktop/mobile selection; no fourth featured-card style. A single pale background surrounds the two highlighted products. The section contains six distinct products total: two highlighted, four regular. All30 skin/card/viewport/column samples passed style consistency, uniqueness, overflow and clipping checks. Native card links and independent action buttons are retained. Asset version35. Evidence: workspace `review/shared-highlight-cards.jpg`.
+
+
+### Final featured-panel clarification
+The existing blue highlighted panel is restored at its original desktop column proportions. It contains one Deals/Top picks heading and exactly two standard product cards rendered by the existing selected card style. The regular product grid alongside it is unchanged. There is no separate featured-card component and no new card style. Verified nine desktop/mobile card/column samples with two cards per blue panel and no overflow or clipping. Asset version36 supersedes the pale-background treatment described above.
+
+
+## Navigation correction — version 40
+
+Modern showcase now starts with Header 1 and Menu 2: the familiar retail header, full search and category navigation, modern styling and category icons. The oversized department/promotion mega menu has been removed. All three menu choices retain the same shopping destinations: text categories, inline category icons, or compact icon tabs. Each category has a native catalogue link and a separate disclosure for its actual brands, product count, category deals and new arrivals. Easy Payment remains in the top header, without another menu entry.
+
+Header 1 retains seven direct category links plus all eight categories under All categories; Headers 2 and 3 expose all eight directly. Removed an old rule hiding a category on narrower desktops. Popup alignment follows the available screen space. Checked 23 category popovers across all three headers at1025px without clipping; Escape dismissal/focus return, a real brand-filter destination,1440px Modern header, and375px mobile without document overflow. The earlier36 header/menu/skin desktop samples identified the popup-edge issue corrected here. All17 runtime regression cases pass. Mobile retains Shop, Search, Deals, Account and its existing centered logo/cart header. Screenshot: `../review/modern-retail-header.jpg` (workspace evidence, outside this repo). Changes remain local.
+
+
+## Simple category menus — version 42
+
+Supersedes version40's brand/deals disclosure panels. Desktop categories now use plain nested lists of the existing subcategory labels. Hover or keyboard focus opens the list; clicking the parent goes directly to its category. Removed separate arrow buttons, repeated Deals/New arrivals shortcuts, brand headings and product counts. The single main Deals destination remains. The three presentation choices only alter text/icon placement. Subcategory destinations retain the demo's existing parent-category landing links; actual child category archives are to be assigned when building the WordPress taxonomy. No new product taxonomy or backend is implied.
+
+Verified Furniture focus opening, Escape closing, direct category navigation,17 runtime cases and JavaScript syntax. Hover behavior uses delegated mouse entry/exit handlers; automated browser controls here did not provide a pointer-hover action, so keyboard behavior was exercised live.
+
+
+Version46 supersedes the shared header spacing changes: Classic retail styling restored, Modern spacing scoped to skin2. Simple hover dropdowns include visible chevron controls and distinct child menu rows. The top row intentionally contains fewer categories to keep Deals on the same line; all eight categories remain in All categories. See UI-UX-AUDIT.md for measured checks.

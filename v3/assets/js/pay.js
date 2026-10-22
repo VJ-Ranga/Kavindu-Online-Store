@@ -124,7 +124,7 @@
       return out;
     }
     root.innerHTML = '<div class="bn ' + T.cls + '"><header class="bn-top"><div class="bn-wrap">' + T.logo + '<span class="bn-secure"><i class="fa-solid fa-lock" aria-hidden="true"></i> Secure</span></div></header>' +
-      '<main class="bn-wrap bn-main"><div class="bn-merchant"><div><span class="bn-k">Paying</span><strong>Kavindu Online Store</strong><span class="bn-k">' + esc(label) + '</span></div><div class="bn-total"><span class="bn-k">Order total</span><strong>Rs ' + num(amount) + '</strong></div></div>' +
+      '<main class="bn-wrap bn-main"><h1 class="bn-page-title">' + esc(T.name) + ' payment</h1><div class="bn-merchant"><div><span class="bn-k">Paying</span><strong>Kavindu Online Store</strong><span class="bn-k">' + esc(label) + '</span></div><div class="bn-total"><span class="bn-k">Order total</span><strong>Rs ' + num(amount) + '</strong></div></div>' +
       '<ol class="bn-steps" aria-label="Progress"></ol><div class="pg-body bn-card"></div><a class="bn-cancel" href="' + cancelUrl() + '">Cancel and return to Kavindu Online Store</a></main>' +
       '<footer class="bn-foot">' + T.name + ' is shown here as a sandbox preview of the hosted payment page.</footer></div>';
     var body = root.querySelector('.pg-body');
