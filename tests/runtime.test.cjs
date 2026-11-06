@@ -16,9 +16,14 @@ function runtime(initial={},mobile=true,route='index.html') {
 test('category counts reflect the catalogue a client can actually browse',()=>{
  const w=runtime(); for(const cat of w.KV_DATA.categories) assert.equal(cat.count,w.KV.products.filter(p=>p.category===cat.id).length,cat.name);
 });
-test('instalment amounts reconcile exactly with total payable',()=>{
- const kv=runtime().KV; for(const p of kv.products) for(const months of [6,12,18,24,36]) {
-  const c=kv.calc(p.price,25,months); assert.equal(c.down+c.monthly*(c.months-1)+c.finalMonthly,c.total);
+test('hire purchase calc matches client example (Rs 100,000, 20%, 6 months)',()=>{
+ const c=runtime().KV.calc(100000,20,6);
+ assert.equal(c.down,20000);assert.equal(c.doc,3500);assert.equal(c.first,23500);assert.equal(c.financed,80000);
+ assert.equal(c.extra,19200);assert.equal(c.balance,99200);assert.equal(c.monthly,16533.33);
+});
+test('instalment parts reconcile with total payable',()=>{
+ const kv=runtime().KV; for(const p of kv.products.filter(kv.hasPrice)) for(const months of [6,12]) for(const dp of [20,35,50]) {
+  const c=kv.calc(p.price,dp,months); assert.ok(Math.abs(c.first+c.balance-c.total)<0.01); assert.ok(Math.abs(c.monthly*c.months-c.balance)<0.01*c.months);
  }
 });
 test('unsupported tenure uses a real plan instead of dividing by an invalid month count',()=>{
@@ -67,6 +72,18 @@ test('mobile card choices do not replace desktop card selections',()=>{
 });
 test('showroom data contains the single Avissawella location',()=>{
  const w=runtime();assert.equal(w.KV_DATA.stores.length,1);assert.equal(w.KV_DATA.stores[0].name,'Avissawella');assert.equal(w.KV_DATA.stores[0].address,w.KV_DATA.brand.address);
+});
+
+test('Piyestra catalogue is appended without prices',()=>{
+ const w=runtime(), furniture=w.KV_DATA.products.filter(p=>p.category==='furniture');
+ assert.equal(w.KV_DATA.products.length,35);assert.equal(furniture.length,10);assert.equal(w.KV_DATA.categories.find(c=>c.id==='furniture').count,10);assert.ok(w.KV_DATA.brands.includes('Piyestra'));
+ assert.ok(furniture.every(p=>p.brand==='Piyestra'&&p.price===null&&p.stock==='Check availability'));
+});
+
+test('priceless products use enquiry cards and cannot enter the cart',()=>{
+ const kv=runtime().KV,p=kv.product('pedro-sofa');
+ for(const opt of ['1','2','3']) { const html=kv.card(p,{opt}); assert.match(html,/Price on request/); assert.match(html,/View details/); assert.doesNotMatch(html,/data-kv-add=/); }
+ kv.cart.add(p.id,1,{silent:true});assert.equal(kv.cart.count(),0);assert.equal(kv.priceBlock(p).includes('NaN'),false);assert.equal(kv.priceBlock(p).includes('Rs 0'),false);
 });
 
 test('every product card exposes a native stretched product link and separate cart action',()=>{

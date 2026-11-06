@@ -17,7 +17,7 @@
     /* ---- sample data ---- */
     var fridge = KV.products.filter(function (p) { return p.category === 'refrigerators'; })[0] || KV.products[0];
     var tv = KV.products.filter(function (p) { return p.category === 'tv-audio'; })[0] || KV.products[1];
-    var chair = KV.products.filter(function (p) { return p.price < 60000 && p.id !== fridge.id; })[0] || KV.products[2];
+    var chair = KV.products.filter(function (p) { return KV.hasPrice(p) && p.price < 60000 && p.id !== fridge.id; })[0] || KV.products[2];
     var plan = { ref: 'EP-2026-0417', product: fridge, months: 12, downPct: 25, calc: KV.calc(fridge.price, 25, 12), paid: Math.max(3, Math.min(12, +KV.load('kv-plan-paid', 3) || 3)) };
     var d4 = new Date(now - 6 * DAY);
     plan.sched = []; for (var i = 1; i <= 12; i++) { var dd = new Date(d4.getFullYear(), d4.getMonth() + (i - 4), d4.getDate()); plan.sched.push({ n: i, due: dd, amt: i === 12 ? plan.calc.finalMonthly : plan.calc.monthly, paid: i <= plan.paid }); }

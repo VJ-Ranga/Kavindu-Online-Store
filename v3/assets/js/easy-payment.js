@@ -5,12 +5,12 @@
     var E = KV.easy, $ = KV.$, esc = KV.esc, fmt = KV.fmt;
     var qs = new URLSearchParams(location.search);
     var S = { pid: '', price: 120000, down: E.defaultDownPct, months: E.defaultTenure };
-    var elig = KV.products.filter(function (p) { return p.price >= E.minPrice; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
+    var elig = KV.products.filter(function (p) { return KV.hasPrice(p) && p.price >= E.minPrice; }).sort(function (a, b) { return a.name.localeCompare(b.name); });
     var q = qs.get('product') || qs.get('id');
     if (!q && Number.isFinite(+qs.get('price')) && +qs.get('price') >= E.minPrice) S.price = Math.round(+qs.get('price'));
-    if (q && KV.product(q)) { S.pid = q; S.price = KV.product(q).price; }
+    if (q && KV.product(q) && KV.hasPrice(KV.product(q))) { S.pid = q; S.price = KV.product(q).price; }
     if (qs.get('months') && E.tenures.some(function (t) { return t.months === +qs.get('months'); })) S.months = +qs.get('months');
-    if (qs.get('down') && +qs.get('down') >= E.minDownPct) S.down = Math.min(60, Math.round(+qs.get('down') / 5) * 5);
+    if (qs.get('down') && +qs.get('down') >= E.minDownPct) S.down = Math.min(E.maxDownPct, Math.round(+qs.get('down') / 5) * 5);
 
     function prodOptions(sel) {
       sel.innerHTML = '<option value="">Other / custom price</option>' + elig.map(function (p) { return '<option value="' + esc(p.id) + '">' + esc(p.name) + ' (' + fmt(p.price) + ')</option>'; }).join('');
@@ -31,11 +31,11 @@
       cPrice.classList.toggle('is-invalid', !ok);
       KV.$$('.kv-chip', cTen).forEach(function (b) { b.setAttribute('aria-pressed', String(+b.dataset.m === S.months)); });
       var r = KV.calc(S.price, S.down, S.months);
-      $('#c-down-amt').textContent = 'Pay ' + fmt(r.down) + ' today';
-      $('#r-monthly').textContent = ok ? fmt(r.monthly) : '-';
+      $('#c-down-amt').textContent = 'First payment ' + fmt(r.first) + ' (incl. ' + r.docPct + '% document charge)';
+      $('#r-monthly').textContent = ok ? KV.fmt2(r.monthly) : '-';
       $('#r-months').textContent = ok ? 'for ' + S.months + ' months' : '';
       $('#r-cash').textContent = fmt(S.price); $('#r-down').textContent = fmt(r.down); $('#r-fin').textContent = fmt(r.financed);
-      $('#r-extra').textContent = fmt(r.extra) + ' (' + r.markupPct + '%)'; $('#r-total').textContent = fmt(r.total);
+      $('#r-doc').textContent = fmt(r.doc) + ' (' + r.docPct + '%)'; $('#r-first').textContent = fmt(r.first); $('#r-extra').textContent = fmt(r.extra) + ' (' + r.ratePct + '% x ' + r.months + ')'; $('#r-bal').textContent = fmt(r.balance); $('#r-total').textContent = fmt(r.total);
       var note = d.getElementById('ep-rounding'); if (!note) { note = d.createElement('div'); note.id = 'ep-rounding'; $('#r-total').parentNode.parentNode.appendChild(note); } note.innerHTML = KV.planNote(r);
       $('#c-table tbody').innerHTML = E.tenures.map(function (t) {
         var x = KV.calc(S.price, S.down, t.months);
@@ -52,7 +52,7 @@
     /* ---------- application ---------- */
     var form = $('#ep-form'), aProd = $('#a-product'), aPrice = $('#a-price'), aDown = $('#a-down'), aMonths = $('#a-months');
     prodOptions(aProd);
-    var downs = []; for (var dp = E.minDownPct; dp <= 60; dp += 5) downs.push(dp);
+    var downs = []; for (var dp = E.minDownPct; dp <= E.maxDownPct; dp += 5) downs.push(dp);
     aDown.innerHTML = downs.map(function (v) { return '<option value="' + v + '">' + v + '%</option>'; }).join('');
     aMonths.innerHTML = E.tenures.map(function (t) { return '<option value="' + t.months + '">' + t.months + ' months</option>'; }).join('');
     $('#a-district').innerHTML = '<option value="">Select district</option>' + KV_DATA.districts.map(function (x) { return '<option>' + esc(x) + '</option>'; }).join('');
@@ -60,7 +60,7 @@
     function syncApp() {
       aProd.value = S.pid; aPrice.value = S.price; aPrice.readOnly = !!S.pid; aDown.value = String(S.down); aMonths.value = String(S.months);
       var r = KV.calc(S.price, S.down, S.months);
-      $('#a-plan-sum').innerHTML = S.price >= E.minPrice ? 'Down payment <strong>' + fmt(r.down) + '</strong>, then <strong>' + fmt(r.monthly) + '</strong> a month for ' + S.months + ' months. Total <strong>' + fmt(r.total) + '</strong>. <span class="text-muted-kv">Rates shown are indicative.</span>' : '';
+      $('#a-plan-sum').innerHTML = S.price >= E.minPrice ? 'First payment <strong>' + fmt(r.first) + '</strong>, then <strong>' + KV.fmt2(r.monthly) + '</strong> a month for ' + S.months + ' months. Total <strong>' + fmt(r.total) + '</strong>. <span class="text-muted-kv">Subject to confirmation by Kavindu Enterprises.</span>' : '';
       var inc = +$('#a-income').value;
       var box = $('#a-afford');
       if (inc > 0) { var ok = inc >= r.monthly * 3; box.classList.toggle('warn', !ok); box.innerHTML = ok ? 'Your income covers this plan: <strong>' + fmt(r.monthly) + '</strong> a month.' : 'Our guideline is income of at least 3 times the monthly amount (<strong>' + fmt(r.monthly * 3) + '</strong>). You can still apply, or add a guarantor.'; } else box.innerHTML = '';

@@ -90,7 +90,7 @@
   w.addEventListener('kv:cart', function (e) { render(); });
   KV.ready(function () {
     if (qs.get('sample') === '1' && !KV.cart.count()) {
-      ['innovex-no-frost-inverter-fridge-250l', 'panasonic-25l-microwave', 'philips-blender-15l'].forEach(function (id, n) { KV.cart.add(id, n === 2 ? 2 : 1, { silent: true }); });
+      ['direct-cool-double-door-refrigerator-180ltr', 'stand-mixer-iekm001', '65-4k-google-qled-tv'].forEach(function (id, n) { KV.cart.add(id, n === 2 ? 2 : 1, { silent: true }); });
     }
     render();
   });

@@ -21,7 +21,7 @@
  *            KV.priceBlock(p)->'<span class="price">' (del RRP + ins price)   KV.stars(rating,count?)
  *   Catalog  KV.products  KV.categories  KV.product(id)  KV.category(id)  KV.url(p)->"product.html?id=.."
  *            KV.saving(p)->{amount,pct}   KV.easyMonthly(p,months?)->monthly at min down payment
- *   Easy Pay KV.calc(price,downPct,months)->{down,financed,extra,total,monthly,months,markupPct}
+ *   Easy Pay KV.calc(price,downPct,months)->{down,doc,first,financed,extra,balance,total,monthly,months,markupPct}  KV.fmt2(n) 2-decimal Rs
  *            KV.easy -> KV_DATA.easyPayment
  *   Cart     KV.cart.items()->[{id,qty,product}]  .add(id,qty=1,{silent})  .remove(id)  .setQty(id,qty)
  *            .subtotal()  .count()  .clear()  .shippingFee()  KV.openCart()
@@ -78,31 +78,38 @@
   KV.fmt = function (n) { return 'Rs ' + Math.round(n).toLocaleString('en-US'); };
   KV.price = function (n) { return '<span class="woocommerce-Price-amount amount"><bdi><span class="woocommerce-Price-currencySymbol">Rs</span>&nbsp;' + Math.round(n).toLocaleString('en-US') + '</bdi></span>'; };
   KV.product = function (id) { for (var i = 0; i < PRODS.length; i++) if (PRODS[i].id === id) return PRODS[i]; return null; };
+  KV.hasPrice = function (p) { return !!p && typeof p.price === 'number' && isFinite(p.price) && p.price > 0; };
   KV.category = function (id) { for (var i = 0; i < CATS.length; i++) if (CATS[i].id === id) return CATS[i]; return null; };
   KV.url = function (p) { return 'product.html?id=' + encodeURIComponent(p.id); };
   KV.saving = function (p) { if (!p.rrp || p.rrp <= p.price) return { amount: 0, pct: 0 }; return { amount: p.rrp - p.price, pct: Math.round((1 - p.price / p.rrp) * 100) }; };
   KV.priceBlock = function (p) {
+    if (!KV.hasPrice(p)) return '<span class="price price-request">Price on request</span>';
     if (p.rrp && p.rrp > p.price) return '<span class="price"><del aria-hidden="true">' + KV.price(p.rrp) + '</del> <span class="screen-reader-text">Original price was: ' + KV.fmt(p.rrp) + '.</span><ins aria-hidden="true">' + KV.price(p.price) + '</ins><span class="screen-reader-text">Current price is: ' + KV.fmt(p.price) + '.</span></span>';
     return '<span class="price">' + KV.price(p.price) + '</span>';
   };
   KV.stars = function (r, count) {
+    if (typeof r !== 'number' || !isFinite(r)) return '';
     return '<div class="star-rating" role="img" aria-label="Rated ' + r.toFixed(2) + ' out of 5"><span style="width:' + (r / 5 * 100).toFixed(0) + '%">Rated <strong class="rating">' + r.toFixed(2) + '</strong> out of 5</span></div>' + (count != null ? '<span class="rating-count">(' + count + ')</span>' : '');
   };
 
   /* ---------- Easy Payment calc ---------- */
+  /* Client hire purchase rules: down = price x down%; document charge = price x docPct; first payment = down + doc;
+     balance = price - down; interest = balance x ratePct x months (flat); instalment balance = balance + interest; monthly = instalment balance / months. */
   KV.calc = function (price, downPct, months) {
     var e = KV.easy, ts = e.tenures || [], t = ts.filter(function (x) { return x.months === +months; })[0];
     if (!t) t = ts.filter(function (x) { return x.months === e.defaultTenure; })[0] || ts[0];
+    var c2 = function (n) { return Math.round(n * 100) / 100; };
     price = Number.isFinite(+price) ? Math.max(0, Math.round(+price)) : 0;
-    downPct = Number.isFinite(+downPct) ? Math.min(100, Math.max(e.minDownPct || 0, +downPct)) : e.defaultDownPct;
+    downPct = Number.isFinite(+downPct) ? Math.min(e.maxDownPct || 100, Math.max(e.minDownPct || 0, +downPct)) : e.defaultDownPct;
     months = t.months;
-    var down = Math.round(price * downPct / 100), fin = price - down, extra = Math.round(fin * t.markupPct / 100);
-    var monthly = Math.ceil((fin + extra) / months), finalMonthly = fin + extra - monthly * (months - 1);
-    return { down: down, financed: fin, extra: extra, total: price + extra, monthly: monthly, finalMonthly: finalMonthly, months: months, markupPct: t.markupPct };
+    var down = c2(price * downPct / 100), doc = c2(price * e.docPct / 100), fin = c2(price - down), extra = c2(fin * e.ratePct / 100 * months), bal = c2(fin + extra), monthly = c2(bal / months);
+    return { price: price, downPct: downPct, down: down, doc: doc, first: c2(down + doc), financed: fin, extra: extra, balance: bal, total: c2(down + doc + bal), monthly: monthly, finalMonthly: monthly, months: months, markupPct: e.ratePct * months, ratePct: e.ratePct, docPct: e.docPct };
   };
-  KV.planNote = function (c) { return '<small class="plan-rounding">Illustrative plan; rates await client confirmation.' + (c.finalMonthly !== c.monthly ? ' Final instalment ' + KV.fmt(c.finalMonthly) + ' after ' + (c.months - 1) + ' payments of ' + KV.fmt(c.monthly) + '.' : '') + '</small>'; };
+  KV.fmt2 = function (n) { return 'Rs ' + (+n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  KV.planNote = function () { return '<small class="plan-rounding">Instalment values are subject to confirmation by Kavindu Enterprises.</small>'; };
 
   KV.easyMonthly = function (p, months) {
+    if (!KV.hasPrice(p)) return 0;
     if (p.price < KV.easy.minPrice) return 0;
     return KV.calc(p.price, KV.easy.minDownPct, months || KV.easy.defaultTenure).monthly;
   };
@@ -111,7 +118,7 @@
   function cleanCart(items) {
     var clean = [];
     items.forEach(function (it) {
-      if (!it || !KV.product(it.id) || !Number.isFinite(+it.qty) || +it.qty < 1) return;
+      if (!it || !KV.product(it.id) || !KV.hasPrice(KV.product(it.id)) || !Number.isFinite(+it.qty) || +it.qty < 1) return;
       var old = clean.filter(function (x) { return x.id === it.id; })[0], qty = Math.min(99, Math.floor(+it.qty));
       if (old) old.qty = Math.min(99, old.qty + qty); else clean.push({ id: it.id, qty: qty });
     }); return clean;
@@ -120,7 +127,7 @@
   KV.cart = {
     items: function () { return cartData.map(function (i) { return { id: i.id, qty: i.qty, product: KV.product(i.id) }; }).filter(function (i) { return i.product; }); },
     add: function (id, qty, o) {
-      var p = KV.product(id); if (!p || /out/i.test(p.stock)) return; qty = Math.min(99, Math.max(1, parseInt(qty, 10) || 1));
+      var p = KV.product(id); if (!p || !KV.hasPrice(p) || /out/i.test(p.stock)) return; qty = Math.min(99, Math.max(1, parseInt(qty, 10) || 1));
       var it = cartData.filter(function (i) { return i.id === id; })[0];
       if (it) it.qty = Math.min(99, it.qty + qty); else cartData.push({ id: id, qty: qty });
       save('kv-cart', cartData); emit('cart', { id: id, action: 'add' });
@@ -212,7 +219,7 @@
   function stockClass(s) { return /out/i.test(s) ? 'out' : /only|low/i.test(s) ? 'low-stock' : 'in-stock'; }
   function liClass(p, extra) {
     var sale = p.rrp && p.rrp > p.price;
-    return 'product type-product post-' + esc(p.id) + ' status-publish ' + (/out/i.test(p.stock) ? 'outofstock' : 'instock') + ' product_cat-' + esc(p.category) + ' has-post-thumbnail' + (sale ? ' sale' : '') + ' shipping-taxable purchasable product-type-simple' + (extra ? ' ' + extra : '');
+    return 'product type-product post-' + esc(p.id) + ' status-publish ' + (/out/i.test(p.stock) ? 'outofstock' : 'instock') + ' product_cat-' + esc(p.category) + ' has-post-thumbnail' + (sale ? ' sale' : '') + ' shipping-taxable' + (KV.hasPrice(p) ? ' purchasable' : '') + ' product-type-simple' + (extra ? ' ' + extra : '');
   }
   function badges(p) {
     var s = KV.saving(p), h = '';
@@ -222,6 +229,7 @@
     return h ? '<span class="product-badges">' + h + '</span>' : '';
   }
   function addBtn(p, cls) {
+    if (!KV.hasPrice(p)) return '<a href="' + KV.url(p) + '" class="button product_type_simple price-request-button ' + (cls || '') + '" rel="nofollow">View details</a>';
     var out = /out/i.test(p.stock);
     if (out) return '<a href="' + KV.url(p) + '" class="button product_type_simple ' + (cls || '') + '" rel="nofollow">Read more</a>';
     return '<a href="?add-to-cart=' + esc(p.id) + '" data-quantity="1" class="button product_type_simple add_to_cart_button ajax_add_to_cart ' + (cls || '') + '" data-kv-add="' + esc(p.id) + '" data-product_id="' + esc(p.id) + '" data-product_sku="' + esc(p.sku) + '" aria-label="Add to cart: &ldquo;' + esc(p.name) + '&rdquo;" rel="nofollow">Add to cart</a>';
@@ -254,13 +262,13 @@
     if (opt === '2') {
       return '<li class="' + liClass(p, 'card-2') + '" data-id="' + esc(p.id) + '"><div class="product-inner"><div class="product-media"><a href="' + url + '" class="woocommerce-LoopProduct-link woocommerce-loop-product__link" tabindex="-1" aria-hidden="true">' + img(p) + '</a>' + badges(p) +
         '</div><div class="product-info"><span class="product-brand">' + esc(p.brand) + '</span><h2 class="woocommerce-loop-product__title"><a class="kv-stretch" href="' + url + '">' + esc(p.name) + '</a></h2>' +
-        '<p class="product-keyspec">' + esc(p.keySpec) + '</p><div class="rating-row">' + KV.stars(p.rating, p.reviews) + '</div>' + KV.priceBlock(p) + offerLine(p) + '<div class="product-actions">' + actionBtns(p) + '</div>' + addBtn(p, 'card-add-bar') + '</div></div></li>';
+        '<p class="product-keyspec">' + esc(p.keySpec) + '</p>' + (KV.stars(p.rating, p.reviews) ? '<div class="rating-row">' + KV.stars(p.rating, p.reviews) + '</div>' : '') + KV.priceBlock(p) + offerLine(p) + '<div class="product-actions">' + actionBtns(p) + '</div>' + addBtn(p, 'card-add-bar') + '</div></div></li>';
     }
     if (opt === '3') {
       var bl = (p.bullets || Object.keys(p.specs || {}).map(function (key) { return key + ': ' + p.specs[key]; })).slice(0, 3).map(function (b) { return '<li>' + esc(b) + '</li>'; }).join('');
       return '<li class="' + liClass(p, 'card-3') + '" data-id="' + esc(p.id) + '"><div class="product-inner"><div class="product-media"><a href="' + url + '" class="woocommerce-LoopProduct-link woocommerce-loop-product__link" tabindex="-1" aria-hidden="true">' + img(p) + '</a>' + badges(p) + '</div>' +
-        '<div class="product-main"><span class="product-brand">' + esc(p.brand) + ' &middot; ' + esc(p.model) + '</span><h2 class="woocommerce-loop-product__title"><a class="kv-stretch" href="' + url + '">' + esc(p.name) + '</a></h2>' + (bl ? '<ul class="product-bullets">' + bl + '</ul>' : '') + '<div class="rating-row">' + KV.stars(p.rating, p.reviews) + '</div></div>' +
-        '<div class="product-buy">' + KV.priceBlock(p) + offerLine(p) + '<span class="delivery-line"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i> ' + esc(p.delivery || (p.price >= D.shipping.freeOver ? 'Free delivery' : 'Delivery ' + KV.fmt(D.shipping.flat))) + '</span>' + addBtn(p) +
+        '<div class="product-main"><span class="product-brand">' + esc(p.brand) + (p.model ? ' &middot; ' + esc(p.model) : '') + '</span><h2 class="woocommerce-loop-product__title"><a class="kv-stretch" href="' + url + '">' + esc(p.name) + '</a></h2>' + (bl ? '<ul class="product-bullets">' + bl + '</ul>' : '') + (KV.stars(p.rating, p.reviews) ? '<div class="rating-row">' + KV.stars(p.rating, p.reviews) + '</div>' : '') + '</div>' +
+        '<div class="product-buy">' + KV.priceBlock(p) + offerLine(p) + (KV.hasPrice(p) ? '<span class="delivery-line"><i class="fa-solid fa-truck-fast" aria-hidden="true"></i> ' + esc(p.delivery || (p.price >= D.shipping.freeOver ? 'Free delivery' : 'Delivery ' + KV.fmt(D.shipping.flat))) + '</span>' : '') + addBtn(p) +
         '<span class="buy-links"><button type="button" class="link-btn" data-kv-wish="' + esc(p.id) + '" aria-pressed="false"><i class="fa-regular fa-heart" aria-hidden="true"></i> Wishlist</button><button type="button" class="link-btn" data-kv-compare="' + esc(p.id) + '" aria-pressed="false"><i class="fa-solid fa-scale-balanced" aria-hidden="true"></i> Compare</button></span></div></div></li>';
     }
     /* Card 1 — simple real-shop card: whole card clickable (stretched link), image, name, price, offer + timer, wishlist, add to cart */
@@ -315,7 +323,7 @@
     var cart = '<a class="mh-btn hdr-cart" href="cart.html" data-kv-open-cart aria-label="Cart"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="hdr-count" data-kv-cart-count>0</span></a>';
     return '<div class="mhead mh-style-' + mode + ' d-lg-none"><div class="mhead-row">' + menu + logo(false, 32) + '<div class="mh-right">' + (mode === '3' ? '' : search) + cart + '</div></div>' + (mode === '2' ? '' : '<div class="mhead-search">' + searchForm('m' + id, false) + '</div>') + '</div>';
   }
-  var NAV1 = ['furniture', 'refrigerators', 'washing-machines', 'tv-audio', 'air-conditioners', 'kitchen-appliances', 'laptops-phones'];
+  var NAV1 = ['furniture', 'refrigerators', 'washing-machines', 'tv-audio', 'air-conditioners', 'kitchen-appliances'];
   function navLinks(ids) {
     return ids.map(function (id) {
       var c = KV.category(id), panel = 'nav-category-' + id;
@@ -459,7 +467,7 @@
   /* ---------- quick view & compare UI ---------- */
   KV.quickView = function (id) {
     var p = KV.product(id), body = $('#kv-quick-body'); if (!p || !body || !w.bootstrap) return;
-    body.innerHTML = '<div class="qv"><div class="qv-img"><img src="' + esc(p.images[0]) + '" alt="' + esc(p.name) + '"></div><div class="qv-info"><span class="product-brand">' + esc(p.brand) + '</span><h3>' + esc(p.name) + '</h3><div class="rating-row">' + KV.stars(p.rating, p.reviews) + '</div>' + KV.priceBlock(p) + saveLine(p) + '<ul class="product-bullets">' + (p.bullets || []).map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul>' + easyLine(p) + stockLine(p) + '<div class="qv-buy"><div class="quantity"><label class="screen-reader-text" for="qv-qty">Quantity</label><input type="number" id="qv-qty" class="input-text qty text" value="1" min="1" max="20" inputmode="numeric"></div><button type="button" class="button alt" data-kv-add="' + esc(p.id) + '" data-kv-qty-input="#qv-qty" data-kv-dismiss-modal>Add to cart</button></div><a class="qv-more" href="' + KV.url(p) + '">View full details <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></div>';
+    body.innerHTML = '<div class="qv"><div class="qv-img"><img src="' + esc(p.images[0]) + '" alt="' + esc(p.name) + '"></div><div class="qv-info"><span class="product-brand">' + esc(p.brand) + '</span><h3>' + esc(p.name) + '</h3>' + (KV.stars(p.rating, p.reviews) ? '<div class="rating-row">' + KV.stars(p.rating, p.reviews) + '</div>' : '') + KV.priceBlock(p) + saveLine(p) + '<ul class="product-bullets">' + (p.bullets || []).map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul>' + easyLine(p) + stockLine(p) + '<div class="qv-buy">' + (KV.hasPrice(p) ? '<div class="quantity"><label class="screen-reader-text" for="qv-qty">Quantity</label><input type="number" id="qv-qty" class="input-text qty text" value="1" min="1" max="20" inputmode="numeric"></div><button type="button" class="button alt" data-kv-add="' + esc(p.id) + '" data-kv-qty-input="#qv-qty" data-kv-dismiss-modal>Add to cart</button>' : '<a class="button alt" href="' + KV.url(p) + '">View details</a>') + '</div><a class="qv-more" href="' + KV.url(p) + '">View full details <i class="fa-solid fa-arrow-right" aria-hidden="true"></i></a></div></div>';
     w.bootstrap.Modal.getOrCreateInstance($('#kv-quick')).show();
   };
   function renderCompareBar() {
@@ -474,7 +482,7 @@
     var keys = {}; ps.forEach(function (p) { Object.keys(p.specs).forEach(function (k) { keys[k] = 1; }); });
     var row = function (l, f) { return '<tr><th scope="row">' + l + '</th>' + ps.map(function (p) { return '<td>' + f(p) + '</td>'; }).join('') + '</tr>'; };
     host.innerHTML = '<div class="table-responsive"><table class="kv-table cmp-table"><thead><tr><th><span class="visually-hidden">Feature</span></th>' + ps.map(function (p) { return '<th scope="col"><a href="' + KV.url(p) + '"><img src="' + esc(p.images[0]) + '" alt="" width="96" height="96"><span>' + esc(p.name) + '</span></a></th>'; }).join('') + '</tr></thead><tbody>' +
-      row('Price', function (p) { return KV.priceBlock(p); }) + row('Rating', function (p) { return p.rating.toFixed(1) + ' (' + p.reviews + ')'; }) + row('Easy Payment', function (p) { var m = KV.easyMonthly(p); return m ? KV.fmt(m) + ' x ' + KV.easy.defaultTenure : '-'; }) +
+      row('Price', function (p) { return KV.priceBlock(p); }) + row('Rating', function (p) { return typeof p.rating === 'number' && isFinite(p.rating) ? p.rating.toFixed(1) + ' (' + p.reviews + ')' : '-'; }) + row('Easy Payment', function (p) { var m = KV.easyMonthly(p); return m ? KV.fmt(m) + ' x ' + KV.easy.defaultTenure : '-'; }) +
       Object.keys(keys).map(function (k) { return row(esc(k), function (p) { return esc(p.specs[k] || '-'); }); }).join('') + row('', function (p) { return addBtn(p); }) + '</tbody></table></div>';
   }
 
@@ -595,7 +603,7 @@
       var box = $('.kv-suggest', inp.parentNode), q = inp.value.trim().toLowerCase();
       if (q.length < 2) { box.hidden = true; return; }
       var m = PRODS.filter(function (p) { return (p.name + ' ' + p.model + ' ' + p.brand).toLowerCase().indexOf(q) > -1; }).slice(0, 5);
-      box.innerHTML = m.length ? m.map(function (p) { return '<li><a href="' + KV.url(p) + '"><img src="' + esc(p.images[0]) + '" alt="" width="40" height="40"><span>' + esc(p.name) + '</span><b>' + KV.fmt(p.price) + '</b></a></li>'; }).join('') : '<li class="none">No products found</li>';
+      box.innerHTML = m.length ? m.map(function (p) { return '<li><a href="' + KV.url(p) + '"><img src="' + esc(p.images[0]) + '" alt="" width="40" height="40"><span>' + esc(p.name) + '</span><b>' + (KV.hasPrice(p) ? KV.fmt(p.price) : 'Price on request') + '</b></a></li>'; }).join('') : '<li class="none">No products found</li>';
       box.hidden = false;
     });
     d.addEventListener('keydown', function (e) { var tab = e.target.closest && e.target.closest('[data-kv-device]'); if (tab && ['ArrowLeft', 'ArrowRight', 'Home', 'End'].indexOf(e.key) > -1) { e.preventDefault(); optDevice = e.key === 'Home' ? 'desktop' : e.key === 'End' ? 'mobile' : optDevice === 'desktop' ? 'mobile' : 'desktop'; syncOptUi(); $('[data-kv-device="' + optDevice + '"]').focus(); return; } if (e.key === 'Escape') { var searchDialog = $('#kv-search-modal.show'); if (searchDialog && w.bootstrap) w.bootstrap.Modal.getOrCreateInstance(searchDialog).hide(); closeNavMenus(true); $$('.kv-suggest').forEach(function (u) { u.hidden = true; }); $$('.allcats.is-open').forEach(function (c) { c.classList.remove('is-open'); var b = $('[data-kv-categories]', c); b.setAttribute('aria-expanded', 'false'); b.focus(); }); } });

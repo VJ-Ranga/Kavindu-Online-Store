@@ -4,7 +4,8 @@
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const rs = n => 'Rs. ' + Math.round(n).toLocaleString('en-US');
+  const hasPrice = p => !!p && typeof p.price === 'number' && Number.isFinite(p.price) && p.price > 0;
+  const rs = n => typeof n === 'number' && Number.isFinite(n) && n > 0 ? 'Rs. ' + Math.round(n).toLocaleString('en-US') : (n === 0 ? 'Free' : 'On request');
   const NOW = Date.now(), H = 3600e3, D = 24 * H;
   const page = document.body.dataset.page;
   const qs = new URLSearchParams(location.search);
@@ -19,22 +20,14 @@
   /* ---------- data ---------- */
   const KV = window.KV_DATA || window.CM || {};
   const FALLBACK = [
-    ['Innovex No Frost Refrigerator (Inverter) 250L', 'Innovex', 'INR240I', 131900, 149900, 'refrigerators'],
-    ['Innovex Front Load Washing Machine 8kg', 'Innovex', 'IWF80', 112500, 124900, 'washing-machines'],
-    ['Innovex 43" Smart LED TV', 'Innovex', 'ILT43S', 84900, 94900, 'tv-audio'],
-    ['Innovex Inverter Air Conditioner 12000 BTU', 'Innovex', 'IAC12I', 149900, 169900, 'air-conditioners'],
-    ['Innovex Microwave Oven 25L', 'Innovex', 'IMW25', 31900, 0, 'kitchen-appliances'],
-    ['Three Seater Fabric Sofa - Grey', 'Kavindu Home', 'KH-SOF3', 119000, 139000, 'furniture'],
-    ['Queen Size Bed with Storage', 'Kavindu Home', 'KH-BED-Q', 98500, 0, 'furniture'],
-    ['Ergonomic Office Chair - Mesh', 'Kavindu Home', 'KH-OC12', 27500, 32500, 'furniture'],
-    ['Six Seater Dining Set', 'Kavindu Home', 'KH-DIN6', 134900, 154900, 'furniture'],
-    ['15.6" Laptop Core i5 / 16GB / 512GB', 'Zenbook', 'ZB15-i5', 219900, 239900, 'laptops-phones'],
-    ['Smartphone 8GB / 256GB', 'Nova', 'NV-X8', 89900, 0, 'laptops-phones'],
-    ['Blender 1.5L 600W', 'Innovex', 'IBL15', 9900, 12900, 'small-appliances']
-  ].map((r, i) => ({ id: 'p' + i, name: r[0], brand: r[1], sku: r[2], price: r[3], was: r[4], category: r[5], image: r[5] === 'air-conditioners' ? '../assets/img/products/innovex-gold-fin-ac.jpg' : 'https://images.unsplash.com/' + ['photo-1622372738946-62e02505feb3', 'photo-1626806787461-102c1bfaaea1', 'photo-1593359677879-a4bb92f829d1', 'photo-1665826254141-bfa10685e002', 'photo-1585659722983-3a675dabf23d', 'photo-1555041469-a586c61ea9bc', 'photo-1631049307264-da0ec9d70304', 'photo-1586023492125-27b2c045efd7', 'photo-1615066390971-03e4e1c36ddf', 'photo-1496181133206-80ce9b88a853', 'photo-1511707171634-5f897ff02aa9', 'photo-1570222094114-d054a817e56b'][i] + '?auto=format&fit=crop&w=120&q=70' }));
+    ['Direct Cool Double Door Refrigerator 180Ltr-Blue Lilly', 'Innovex', 'DDR195BULY', 98500, 0, 'refrigerators'],
+    ['65" 4K Google QLED TV', 'Innovex', 'ITVE65G', 299900, 329900, 'tv-audio'],
+    ['Stand Mixer', 'Innovex', 'ISMX001', 24900, 27400, 'kitchen-appliances'],
+    ['Stand Fan With Remote BLDC 16" (9 Speed)', 'Innovex', 'ISF019DC', 21490, 23600, 'small-appliances']
+  ].map((r, i) => ({ id: r[2].toLowerCase(), name: r[0], brand: r[1], sku: r[2], price: r[3], was: r[4], category: r[5], image: '' }));
   const catNames = {};
   (KV.categories || []).forEach(c => { catNames[c.id] = c.name; });
-  Object.assign(catNames, { 'refrigerators': 'Refrigerators', 'washing-machines': 'Washing Machines', 'tv-audio': 'TV & Audio', 'air-conditioners': 'Air Conditioners', 'kitchen-appliances': 'Kitchen Appliances', 'furniture': 'Furniture', 'laptops-phones': 'Laptops & Phones', 'small-appliances': 'Small Appliances' }, (KV.categories || []).reduce((a, c) => (a[c.id] = c.name, a), {}));
+  Object.assign(catNames, { 'refrigerators': 'Refrigerators', 'washing-machines': 'Washing Machines', 'tv-audio': 'TV & Audio', 'air-conditioners': 'Air Conditioners', 'kitchen-appliances': 'Kitchen Appliances', 'furniture': 'Furniture', 'small-appliances': 'Small Appliances' }, (KV.categories || []).reduce((a, c) => (a[c.id] = c.name, a), {}));
   const rawProducts = (Array.isArray(KV.products) && KV.products.length) ? KV.products : FALLBACK;
   const hash = s => { let h = 7; for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) >>> 0; return h; };
   const PRODUCTS = rawProducts.map((p, i) => {
@@ -43,10 +36,11 @@
     if (/out/i.test(stock)) st = 'out'; else { const m = stock.match(/(\d+)/); qty = m ? +m[1] : 4 + hash(p.id || p.name) % 38; if (m) st = 'low'; }
     return {
       id: p.id || 'p' + i, name: p.name, brand: p.brand || '', sku: p.sku || p.model || ('KV-' + (1000 + i)),
-      price: +p.price || 0, rrp: +(p.rrp || p.was) > +p.price ? +(p.rrp || p.was) : 0, category: p.category || '',
+      price: hasPrice(p) ? p.price : null, rrp: hasPrice(p) && +(p.rrp || p.was) > +p.price ? +(p.rrp || p.was) : 0, category: p.category || '',
       img, stockState: st, qty, featured: i % 5 === 0, daysAgo: 3 + (hash(p.id || p.name) % 140)
     };
   });
+  const PRICED_PRODUCTS = PRODUCTS.filter(hasPrice);
   const catLabel = c => catNames[c] || (c ? c.replace(/-/g, ' ').replace(/\b\w/g, m => m.toUpperCase()) : 'Uncategorized');
   const EP_CFG = Object.assign({ minDownPct: 20, defaultDownPct: 25, tenures: [{ months: 6, markupPct: 8 }, { months: 12, markupPct: 16 }, { months: 18, markupPct: 24 }, { months: 24, markupPct: 32 }, { months: 36, markupPct: 45 }] }, KV.easyPayment || {});
   S.ep = S.ep || { tenures: EP_CFG.tenures.map(t => ({ months: t.months, markupPct: t.markupPct })), minDownPct: EP_CFG.minDownPct, lateFee: 500, grace: 5, minPrice: EP_CFG.minPrice || 15000, enabled: true };
@@ -68,7 +62,7 @@
   ];
   const STREETS = ['Temple Road', 'Lake Drive', 'Station Road', 'High Level Road', 'Main Street', 'Galle Road', 'Flower Road', 'School Lane'];
   const ORDERS = ORDER_ROWS.map((r, i) => {
-    const n = PRODUCTS.length, a = PRODUCTS[(i * 5 + 1) % n], b = PRODUCTS[(i * 7 + 4) % n];
+    const n = PRICED_PRODUCTS.length, a = PRICED_PRODUCTS[(i * 5 + 1) % n], b = PRICED_PRODUCTS[(i * 7 + 4) % n];
     const items = [{ p: a, qty: 1 }]; if (i % 3 === 1) items.push({ p: b, qty: 1 + (i % 2) });
     const sub = items.reduce((t, x) => t + x.p.price * x.qty, 0), ship = sub > 100000 ? 0 : 1500;
     const first = r[0].split(' ')[0].toLowerCase(), last = r[0].split(' ').slice(-1)[0].toLowerCase();
@@ -93,7 +87,7 @@
     ['EP-1008', 'Chamila Gunasekara', '883456721V', '078 226 5540', 36, 'rejected', null, 'Driver', 'Private', 41000, '', 3]
   ];
   const APPS = APP_ROWS.map((r, i) => {
-    const o = r[6] ? orderById(r[6]) : null, prod = o ? o.items[0].p : PRODUCTS[(i * 3 + 2) % PRODUCTS.length], price = o ? o.items[0].p.price : prod.price;
+    const o = r[6] ? orderById(r[6]) : null, prod = o ? o.items[0].p : PRICED_PRODUCTS[(i * 3 + 2) % PRICED_PRODUCTS.length], price = o ? o.items[0].p.price : prod.price;
     const down = Math.round(price * (S.ep.minDownPct + (i % 3) * 5) / 100 / 100) * 100;
     if (o) o.ep = r[0];
     return { id: r[0], name: r[1], nic: r[2], mobile: r[3], months: r[4], status0: r[5], order: r[6], job: r[7], employer: r[8], income: r[9], prod, price, down, docs: DOCS.slice(0, r[11] + 0), at: NOW - (i === 0 ? 30 : 30 - i * 3) * D + i * H };
@@ -106,7 +100,7 @@
     ['PL-2004', null, 'Wasantha Rodrigo', 150, [3]], ['PL-2005', null, 'Kumari Hettiarachchi', 125, [2, 3]], ['PL-2006', null, 'Anura Dahanayake', 205, []]
   ];
   const PLANS = PLAN_ROWS.map((r, i) => {
-    const app = r[1] ? APPS.find(a => a.id === r[1]) : null, prod = app ? app.prod : PRODUCTS[(i * 4 + 3) % PRODUCTS.length], months = app ? app.months : [12, 12, 24][i % 3] + (i === 5 ? 0 : 0), price = prod.price;
+    const app = r[1] ? APPS.find(a => a.id === r[1]) : null, prod = app ? app.prod : PRICED_PRODUCTS[(i * 4 + 3) % PRICED_PRODUCTS.length], months = app ? app.months : [12, 12, 24][i % 3] + (i === 5 ? 0 : 0), price = prod.price;
     const c = calc(price, 25, months), start = NOW - r[3] * D;
     return { id: r[0], app: r[1], name: r[2], prod, price, months, monthly: c.monthly, total: c.total, down: c.down, start, missed: r[4] };
   });

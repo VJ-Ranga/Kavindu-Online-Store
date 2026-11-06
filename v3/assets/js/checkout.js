@@ -31,7 +31,7 @@
 
   function ensureSample() {
     if (qs.get('sample') === '1' && !KV.cart.count()) {
-      ['innovex-no-frost-inverter-fridge-250l', 'panasonic-25l-microwave', 'philips-blender-15l'].forEach(function (id, n) { KV.cart.add(id, n === 2 ? 2 : 1, { silent: true }); });
+      ['direct-cool-double-door-refrigerator-180ltr', 'stand-mixer-iekm001', '65-4k-google-qled-tv'].forEach(function (id, n) { KV.cart.add(id, n === 2 ? 2 : 1, { silent: true }); });
     }
   }
   function emptyState(host) {
@@ -134,7 +134,7 @@
       d.getElementById('inst-opts').innerHTML = opts;
       var eMonths = parseInt(d.getElementById('easy_months').value, 10) || 12, ep = KV.calc(t.total, D.easyPayment.minDownPct, eMonths);
       d.getElementById('pb-easy').innerHTML = t.total < D.easyPayment.minPrice ? '<p class="text-sale small">Easy Payment is available for orders of ' + fmt(D.easyPayment.minPrice) + ' or more.</p>' :
-        '<dl class="easy-sum"><div><dt>Down payment (' + D.easyPayment.minDownPct + '%)</dt><dd>' + fmt(ep.down) + '</dd></div><div><dt>Monthly payment</dt><dd><strong>' + fmt(ep.monthly) + ' x ' + eMonths + '</strong></dd></div><div><dt>Total payable</dt><dd>' + fmt(ep.total) + '</dd></div></dl>' + KV.planNote(ep) + '<p class="small text-muted-kv">Indicative figures. The final plan is confirmed when your application is approved.</p>';
+        '<dl class="easy-sum"><div><dt>First payment (' + D.easyPayment.minDownPct + '% + ' + ep.docPct + '% document charge)</dt><dd>' + fmt(ep.first) + '</dd></div><div><dt>Monthly payment</dt><dd><strong>' + KV.fmt2(ep.monthly) + ' x ' + eMonths + '</strong></dd></div><div><dt>Total payable</dt><dd>' + fmt(ep.total) + '</dd></div></dl>' + KV.planNote(ep) + '<p class="small text-muted-kv">Indicative figures. The final plan is confirmed when your application is approved.</p>';
       var btn = d.getElementById('place_order');
       btn.textContent = st.method === 'cod' || st.method === 'bacs' ? 'Place order' : st.method === 'easy_payment' ? 'Place order and apply' : 'Place order and pay';
     }
@@ -231,7 +231,8 @@
     var smp = qs.get('sample');
     if (!o && smp && smp !== '1') {
       var sampleNo = /^(?:KV-\d{1,10}|EP-\d{4}-\d{1,10}|\d{1,10})$/.test(qs.get('number') || '') ? qs.get('number') : 1042;
-      var meth = methodOf(smp) || methodOf('bacs'), sampleProduct = KV.product(qs.get('product')), items = sampleProduct ? [sampleProduct] : ['innovex-no-frost-inverter-fridge-250l', 'panasonic-25l-microwave'].map(function (id) { return KV.product(id); });
+      var meth = methodOf(smp) || methodOf('bacs'), sampleProduct = KV.product(qs.get('product')); if (sampleProduct && !KV.hasPrice(sampleProduct)) sampleProduct = null;
+      var items = sampleProduct ? [sampleProduct] : ['direct-cool-double-door-refrigerator-180ltr', 'stand-mixer-iekm001'].map(function (id) { return KV.product(id); }).filter(function (p) { return KV.hasPrice(p); });
       var sub = items.reduce(function (s, p) { return s + p.price; }, 0);
       o = { number: sampleNo, key: 'wc_order_sample', date: new Date().toISOString(), status: meth.id === 'cod' ? 'processing' : (meth.gw ? 'processing' : 'on-hold'), items: items.map(function (p) { return { id: p.id, name: p.name, qty: 1, price: p.price }; }),
         subtotal: sub, discount: 0, shipping: 0, shipLabel: 'Standard delivery (islandwide)', total: sub, method: meth.id, methodTitle: meth.title, gw: meth.gw || '',
@@ -251,7 +252,7 @@
       '<h3 class="wc-bacs-bank-details-account-name">' + BANK.name + '</h3><ul class="wc-bacs-bank-details order_details bacs_details"><li class="bank_name">Bank: <strong>' + BANK.bank + '</strong></li><li class="branch">Branch: <strong>' + BANK.branch + '</strong></li><li class="account_number">Account number: <strong>' + BANK.no + '</strong></li><li class="sort_code">SWIFT / BIC: <strong>' + BANK.swift + '</strong></li></ul><p class="small text-muted-kv">Bank details shown are placeholders until confirmed by the client.</p></section>';
     else if (o.method === 'cod') extra = '<div class="co-panel"><h2>Cash on delivery</h2><p>Please keep <strong>' + fmt(o.total) + '</strong> ready when our team delivers your order. We will call you on <strong>' + esc(b.phone) + '</strong> to arrange a delivery time.</p></div>';
     else if (o.method === 'easy_payment' && o.plan) extra = '<div class="co-panel co-easy"><span class="status-pill pending">Pending approval</span><h2>Your Easy Payment application</h2><p>Reference <strong>' + esc(o.plan.ref) + '</strong>. Your order is on hold until our team reviews your application and confirms the plan below. Complete the application with your employment details and documents so we can approve it faster.</p>' +
-      '<dl class="easy-sum"><div><dt>Down payment</dt><dd>' + fmt(o.plan.down) + '</dd></div><div><dt>Monthly payment</dt><dd><strong>' + fmt(o.plan.monthly) + ' x ' + o.plan.months + '</strong></dd></div><div><dt>Total payable</dt><dd>' + fmt(o.plan.total) + '</dd></div></dl>' + KV.planNote(o.plan) + '<a class="button btn-kv-easy" href="easy-payment.html?order=' + o.number + '&months=' + o.plan.months + '&down=' + Math.round(o.plan.down / (o.plan.total - o.plan.extra) * 100) + '&price=' + (o.plan.total - o.plan.extra) + '&ref=' + esc(o.plan.ref) + '">Continue your application</a></div>';
+      '<dl class="easy-sum"><div><dt>First payment</dt><dd>' + fmt(o.plan.first || o.plan.down) + '</dd></div><div><dt>Monthly payment</dt><dd><strong>' + KV.fmt2(o.plan.monthly) + ' x ' + o.plan.months + '</strong></dd></div><div><dt>Total payable</dt><dd>' + fmt(o.plan.total) + '</dd></div></dl>' + KV.planNote(o.plan) + '<a class="button btn-kv-easy" href="easy-payment.html?order=' + o.number + '&months=' + o.plan.months + '&down=' + (o.plan.downPct || 20) + '&price=' + (o.plan.price || 0) + '&ref=' + esc(o.plan.ref) + '">Continue your application</a></div>';
     else if (o.gw && o.pay) extra = '<div class="co-panel"><h2>Payment received</h2><p>Paid with ' + esc(o.methodTitle) + (o.inst ? ' (' + o.inst.months + ' months, ' + esc(o.inst.bank) + ')' : '') + '. Payment reference <strong>' + esc(o.pay.ref) + '</strong>. Preview confirmation for ' + esc(b.email) + '.</p></div>';
     root.innerHTML = head + '<ul class="woocommerce-order-overview woocommerce-thankyou-order-details order_details">' +
       '<li class="woocommerce-order-overview__order order">Order number: <strong>' + o.number + '</strong></li><li class="woocommerce-order-overview__date date">Date: <strong>' + dateStr(o.date) + '</strong></li>' +

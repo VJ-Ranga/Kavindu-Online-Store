@@ -18,8 +18,8 @@
     if (S.sort === 'deals' && !(p.rrp > p.price)) return false;
     if (S.q) { var hay = (p.name + ' ' + p.brand + ' ' + p.model + ' ' + p.category + ' ' + p.keySpec).toLowerCase(); if (S.q.toLowerCase().split(/\s+/).some(function (t) { return hay.indexOf(t) < 0; })) return false; }
     if (skip !== 'brand' && S.brands.length && S.brands.indexOf(p.brand) < 0) return false;
-    if (S.min !== '' && p.price < +S.min) return false;
-    if (S.max !== '' && p.price > +S.max) return false;
+    if (S.min !== '' && (!KV.hasPrice(p) || p.price < +S.min)) return false;
+    if (S.max !== '' && (!KV.hasPrice(p) || p.price > +S.max)) return false;
     if (S.easy && !(easyM(p) && easyM(p) <= +S.easy)) return false;
     if (S.stock && p.stock === 'Out of stock') return false;
     if (S.rating && p.rating < +S.rating) return false;
@@ -28,7 +28,7 @@
   function sorted(list) {
     var l = list.slice();
     var f = { deals: function (a, b) { return KV.saving(b).pct - KV.saving(a).pct; }, popularity: function (a, b) { return b.reviews - a.reviews; }, rating: function (a, b) { return b.rating - a.rating || b.reviews - a.reviews; },
-      date: function (a, b) { return idx[b.id] - idx[a.id]; }, price: function (a, b) { return a.price - b.price; }, 'price-desc': function (a, b) { return b.price - a.price; } }[S.sort];
+      date: function (a, b) { return idx[b.id] - idx[a.id]; }, price: function (a, b) { return (KV.hasPrice(a) ? 0 : 1) - (KV.hasPrice(b) ? 0 : 1) || (KV.hasPrice(a) ? a.price - b.price : 0); }, 'price-desc': function (a, b) { return (KV.hasPrice(a) ? 0 : 1) - (KV.hasPrice(b) ? 0 : 1) || (KV.hasPrice(a) ? b.price - a.price : 0); } }[S.sort];
     return f ? l.sort(f) : l;
   }
   function url(over) {
@@ -49,7 +49,7 @@
   function buildFilters() {
     var base = ALL.filter(function (p) { return matches(p, 'cat'); });
     var cats = '<ul class="f-list"><li><a href="#" data-cat="" class="' + (!S.cat ? 'on' : '') + '">All products <span>' + base.length + '</span></a></li>' +
-      D.categories.map(function (c) { var n = base.filter(function (p) { return p.category === c.id; }).length; return '<li><a href="#" data-cat="' + c.id + '" class="' + (S.cat === c.id ? 'on' : '') + '"' + (S.cat === c.id ? ' aria-current="true"' : '') + '>' + esc(c.name) + ' <span>' + n + '</span></a></li>'; }).join('') + '</ul>';
+      D.categories.map(function (c) { var n = base.filter(function (p) { return p.category === c.id; }).length; return '<li><a href="#" data-cat="' + c.id + '" class="' + (S.cat === c.id ? 'on' : '') + '"' + (S.cat === c.id ? ' aria-current="true"' : '') + '>' + esc(c.name) + (n ? ' <span>' + n + '</span>' : '') + '</a></li>'; }).join('') + '</ul>';
     var brands = {}; ALL.filter(function (p) { return matches(p, 'brand'); }).forEach(function (p) { brands[p.brand] = (brands[p.brand] || 0) + 1; });
     S.brands.forEach(function (b) { if (!brands[b]) brands[b] = 0; });
     var bh = '<ul class="f-list f-checks">' + Object.keys(brands).sort().map(function (b, i) { return '<li><label><input type="checkbox" name="brand" value="' + esc(b) + '"' + (S.brands.indexOf(b) > -1 ? ' checked' : '') + '> <span class="lb">' + esc(b) + '</span><span class="ct">' + brands[b] + '</span></label></li>'; }).join('') + '</ul>';
@@ -57,8 +57,9 @@
       '<div class="f-quick">' + [['Under 50,000', '', 50000], ['50,000 - 150,000', 50000, 150000], ['Over 150,000', 150000, '']].map(function (r) { return '<button type="button" class="kv-chip" data-min="' + r[1] + '" data-max="' + r[2] + '">' + r[0] + '</button>'; }).join('') + '</div>';
     var easy = '<label class="screen-reader-text" for="f-easy">Easy Payment maximum per month</label><select id="f-easy" name="easy"><option value="">Any monthly amount</option>' + [5000, 10000, 15000, 25000, 50000].map(function (v) { return '<option value="' + v + '"' + (+S.easy === v ? ' selected' : '') + '>Up to ' + KV.fmt(v) + ' / month</option>'; }).join('') + '</select><p class="f-note">Based on the minimum down payment and default plan.</p>';
     var avail = '<label class="f-check"><input type="checkbox" name="stock" value="1"' + (S.stock ? ' checked' : '') + '> In stock only</label>';
-    var rate = '<ul class="f-list f-checks">' + [['', 'Any rating'], ['4', '4 stars and above'], ['3', '3 stars and above']].map(function (r) { return '<li><label><input type="radio" name="rating" value="' + r[0] + '"' + (String(S.rating) === r[0] ? ' checked' : '') + '> <span class="lb">' + r[1] + '</span></label></li>'; }).join('') + '</ul>';
-    $('#filter-form').innerHTML = group('cat', 'Category', cats) + group('price', 'Price', price) + group('brand', 'Brand', bh) + group('easy', 'Easy Payment', easy) + group('stock', 'Availability', avail) + group('rating', 'Customer rating', rate, false);
+    var hasRating = ALL.some(function (p) { return typeof p.rating === 'number'; });
+    var rate = hasRating ? '<ul class="f-list f-checks">' + [['', 'Any rating'], ['4', '4 stars and above'], ['3', '3 stars and above']].map(function (r) { return '<li><label><input type="radio" name="rating" value="' + r[0] + '"' + (String(S.rating) === r[0] ? ' checked' : '') + '> <span class="lb">' + r[1] + '</span></label></li>'; }).join('') + '</ul>' : '';
+    $('#filter-form').innerHTML = group('cat', 'Category', cats) + group('price', 'Price', price) + (D.brands.length >= 3 ? group('brand', 'Brand', bh) : '') + group('easy', 'Easy Payment', easy) + group('stock', 'Availability', avail) + (hasRating ? group('rating', 'Customer rating', rate, false) : '');
   }
 
   /* ---------- results ---------- */
@@ -67,7 +68,7 @@
     $('#shop-crumb').innerHTML = crumb;
     var t = c ? c.name : S.sort === 'deals' ? 'Deals and offers' : S.q ? 'Search results for "' + S.q + '"' : 'All products';
     $('#shop-title').textContent = t; d.title = t + ' | Kavindu Online Store';
-    $('#shop-desc').textContent = c ? (c.subs && c.subs.length ? 'Including ' + c.subs.join(', ').toLowerCase() + '. Delivery island-wide, Easy Payment available on orders over Rs 15,000.' : 'Delivery island-wide. Easy Payment available on orders over Rs 15,000.') : S.q ? '' : 'Furniture, home appliances, TVs, laptops and phones. Delivery island-wide, with Easy Payment monthly plans on orders over Rs 15,000.';
+    $('#shop-desc').textContent = c ? (c.subs && c.subs.length ? 'Including ' + c.subs.join(', ').toLowerCase() + '. Delivery island-wide, Easy Payment available on orders over Rs 15,000.' : 'Delivery island-wide. Easy Payment available on orders over Rs 15,000.') : S.q ? '' : 'Furniture, home appliances and TVs. Delivery island-wide, with Easy Payment monthly plans on orders over Rs 15,000.';
   }
   function chips(total) {
     var a = [];
@@ -94,7 +95,7 @@
     $$('.view-toggle .kv-chip').forEach(function (b) { var on = b.dataset.view === S.view; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
     var host = $('#shop-loop');
     host.className = S.view === 'list' ? 'view-list' : '';
-    host.innerHTML = total ? KV.grid(slice, { cols: 3, opt: S.view === 'list' ? '3' : undefined }) : '<div class="shop-empty"><h2>No products match your filters</h2><p>Try removing a filter, or browse a category.</p><a class="button alt" href="shop.html">View all products</a></div>';
+    host.innerHTML = total ? KV.grid(slice, { cols: 3, opt: S.view === 'list' ? '3' : undefined }) : '<div class="shop-empty"><h2>' + (S.cat && KV.category(S.cat) ? 'Products coming soon' : 'No products match your filters') + '</h2><p>' + (S.cat && KV.category(S.cat) ? 'We are preparing this category for the store.' : 'Try removing a filter, or browse a category.') + '</p><a class="button alt" href="shop.html">View all products</a></div>';
     var pg = '';
     if (pages > 1) {
       pg = '<ul class="page-numbers">';

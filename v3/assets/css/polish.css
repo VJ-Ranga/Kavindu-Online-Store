@@ -241,3 +241,11 @@ body[data-skin] .kv-header .allc-fly > ul > li > a:focus-visible { background: v
 .side-banner img[src*="/products/"] { padding: 0; }
 
 .hero-side .side-banner img[src*="/products/"] { object-fit: cover !important; }
+
+/* 7 categories: last tile fills the row with no empty slot, same height as its row */
+.cat-tiles > :nth-child(7):last-child { grid-column: span 2; }
+body[data-skin] .cat-tiles > :nth-child(7):last-child .ph { aspect-ratio: 8/3; }
+@media (min-width: 992px) {
+  .cat-tiles > :nth-child(7):last-child { display: flex; flex-direction: column; height: 100%; }
+  body[data-skin] .cat-tiles > :nth-child(7):last-child .ph { aspect-ratio: auto; flex: 1 1 0; height: 0; min-height: 0; }
+}
