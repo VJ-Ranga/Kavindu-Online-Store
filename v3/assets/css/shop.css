@@ -166,3 +166,9 @@ body.single-product[data-card="3"] section.related ul.products { grid-template-c
 }
 @media (prefers-reduced-motion: reduce) { .pd-sticky { transition: none; } }
 @media (max-width: 575.98px) { .pay-body { padding-left: 16px; } .pd-price .price { font-size: 28px; } .bank-plans { grid-template-columns: 1fr; } form.cart .buy-now { flex-basis: 100px; } }
+
+/* Related products: 6 items in a slider, 4 visible on desktop */
+section.related-rail .related-head { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; } section.related-rail .related-head h2 { font-size: 24px; margin: 0; }
+section.related-rail .rail-track ul.products { grid-template-columns: none; gap: 16px; }
+@media (min-width: 992px) { section.related-rail .rail-list > li { flex: 0 0 calc((100% - 48px) / 4); } }
+@media (max-width: 767.98px) { section.related-rail .rail-arrows { display: none; } }

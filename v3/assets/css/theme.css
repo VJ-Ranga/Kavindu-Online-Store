@@ -974,3 +974,10 @@ body[data-skin] li.card-3 .product-media img { padding: 0; }
   body[data-mcols="1"] li.card-3 .product-buy { grid-column: 1; grid-row: auto; }
   body[data-mcols="1"] li.card-3 .product-bullets { display: block; }
 }
+
+/* Home Easy Payment band: offer summary instead of calculator */
+.easy-offer-list { list-style: none; padding: 0; margin: 4px 0 20px; display: grid; gap: 14px; }
+.easy-offer-list li { display: flex; gap: 12px; align-items: flex-start; }
+.easy-offer-list i { flex: 0 0 36px; height: 36px; border-radius: 50%; background: var(--color-easy-soft); color: var(--color-easy); display: grid; place-items: center; font-size: 15px; }
+.easy-offer-list strong { display: block; font-size: 15px; color: var(--color-text); } .easy-offer-list span { font-size: 13.5px; color: var(--color-muted, #5B6472); }
+.home-easy-offer .easy-note { margin: 10px 0 0; }

@@ -58,9 +58,10 @@
   }
   function related() {
     var rel = D.products.filter(function (x) { return x.id !== p.id && x.category === p.category; });
-    if (rel.length < 4) rel = rel.concat(D.products.filter(function (x) { return x.id !== p.id && x.category !== p.category && x.brand === p.brand; }));
-    return rel.slice(0, 4);
+    if (rel.length < 6) rel = rel.concat(D.products.filter(function (x) { return x.id !== p.id && x.category !== p.category && x.brand === p.brand; }));
+    return rel.slice(0, 6);
   }
+  function relGrid() { return KV.grid(related(), { cls: 'rail-list' }); }
 
   var distOpts = '<option value="">Select district</option>' + D.districts.map(function (x) { return '<option>' + esc(x) + '</option>'; }).join('');
   var shipFree = hasPrice && p.price >= D.shipping.freeOver;
@@ -92,7 +93,7 @@
       '<div class="woocommerce-Tabs-panel woocommerce-Tabs-panel--delivery panel entry-content wc-tab" id="tab-delivery" role="tabpanel" aria-labelledby="tab-title-delivery" hidden><h2>Delivery and returns</h2><p>We deliver island-wide. Free delivery in Colombo on orders over ' + KV.fmt(D.shipping.freeOver) + '; other orders ' + KV.fmt(D.shipping.flat) + ' flat. Large items are delivered by our own team, with installation for air conditioners, washing machines and furniture assembly.</p><p>Inspect your item on delivery. If it arrives damaged or faulty, tell us within 7 days and we will replace or refund it. Items must be unused and in original packaging.</p></div>' +
       '<div class="woocommerce-Tabs-panel woocommerce-Tabs-panel--reviews panel entry-content wc-tab" id="tab-reviews" role="tabpanel" aria-labelledby="tab-title-reviews" hidden><h2>Reviews</h2>' + reviews() + '</div>' +
     '</div>' +
-    '<section class="related products"><h2>Related products</h2>' + KV.grid(related(), { cols: 4 }) + '</section>' +
+    '<section class="related products related-rail"><div class="related-head"><h2>Related products</h2><span class="rail-arrows"><button type="button" data-rel-scroll="-1" aria-label="Previous related products"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button><button type="button" data-rel-scroll="1" aria-label="Next related products"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button></span></div><div class="rail-track" tabindex="0" role="group" aria-label="Related products">' + relGrid() + '</div></section>' +
     (rvShow.length ? '<section class="related products recent"><h2>Recently viewed</h2>' + KV.grid(rvShow, { cols: 4 }) + '</section>' : '') +
     '</div>' +
     (hasPrice ? '<div class="pd-sticky" id="pd-sticky" aria-hidden="true"><div class="pd-sticky-in"><div class="ps-info"><strong>' + KV.fmt(p.price) + '</strong>' + (easyOk ? '<span>or ' + KV.fmt(KV.easyMonthly(p, maxM) || 0) + '/month</span>' : '') + '</div><button type="button" class="button alt" data-kv-add="' + esc(p.id) + '" tabindex="-1"' + (out ? ' disabled' : '') + '>Add to cart</button></div></div>' : '');
@@ -103,6 +104,8 @@
     if (t) { var s = p.images[+t.dataset.i]; $('#pd-main').src = s; $('#pd-main-link').href = s; $$('.flex-control-thumbs button').forEach(function (b) { b.classList.toggle('on', b === t); }); }
     var q = e.target.closest('.q-btn');
     if (q) { var i = $('#quantity_1'); i.value = Math.max(1, Math.min(max, (+i.value || 1) + +q.dataset.q)); }
+    var rs = e.target.closest('[data-rel-scroll]');
+    if (rs) { var tr = $('.related-rail .rail-track'), li = $('li.product', tr); tr.scrollBy({ left: +rs.dataset.relScroll * (li ? li.getBoundingClientRect().width + 16 : 280), behavior: 'smooth' }); }
     var tn = e.target.closest('.ep-tenures [data-m]'); if (tn) { st.months = +tn.dataset.m; easyCalc(); }
     var dn = e.target.closest('.ep-downs [data-d]'); if (dn) { st.down = +dn.dataset.d; easyCalc(); }
   });
@@ -155,6 +158,6 @@
   if (hasPrice && 'IntersectionObserver' in w) {
     new IntersectionObserver(function (en) { var show = !en[0].isIntersecting && en[0].boundingClientRect.top < 0; bar.classList.toggle('show', show); bar.setAttribute('aria-hidden', !show); $('button', bar).tabIndex = show ? 0 : -1; }).observe($('#pd-form'));
   }
-  w.addEventListener('kv:options', function (e) { if (e.detail && (e.detail.key === 'card' || e.detail.key === 'all')) { $$('section.related').forEach(function (s, i) { var l = i ? rvShow : related(); $('ul.products', s).outerHTML = KV.grid(l, { cols: 4 }); }); KV.sync && KV.sync(); } });
+  w.addEventListener('kv:options', function (e) { if (e.detail && (e.detail.key === 'card' || e.detail.key === 'all')) { $$('section.related').forEach(function (s, i) { $('ul.products', s).outerHTML = i ? KV.grid(rvShow, { cols: 4 }) : relGrid(); }); KV.sync && KV.sync(); } });
   KV.ready(function () { KV.sync && KV.sync(); });
 })(window, document);
