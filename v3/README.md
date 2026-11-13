@@ -29,7 +29,10 @@ Use **Reset desktop defaults** and **Reset mobile defaults** to clear previously
 |---|---|
 | index · shop · product (`?id=`) · cart · checkout · pay (`?gw=payhere\|koko\|mintpay`) · order-received · easy-payment · my-account · stores · about · contact · policies | admin/index · orders · order (`?id=`) · products · easy-payment · settings-payments |
 
-## Theme options (floating "Theme options" button, bottom-left)
+## Theme options — LOCKED to approved defaults (9 Nov 2026)
+The floating "Theme options" button and drawer are no longer rendered. `OPT_LOCKED` in `assets/js/theme.js` forces `OPT_DEF` (Everyday retail, Version55/56) for every visitor and ignores saved `kv-options` and `?opt=` links. All option code below is kept; set `OPT_LOCKED` false (or `window.KV_OPTIONS_UNLOCKED = true` before theme.js) to bring the selector back. The rest of this section is historical.
+
+### Former selector (historical)
 Design style (skin) ×2 · Desktop header ×1 (Retail) · Hero ×3 · Category display ×3 · Product card ×3 · Homepage product sections (rail1 Best sellers, rail2 Deals, rail3 New arrivals) ×3 each · Footer ×3. Skin 2 = Modern: `?opt=skin-2`. Defaults rail1-1, rail2-3, rail3-1; old `rail-N` still sets all three.
 Shareable preview links (also saves the choice):
 - `index.html?opt=header-1,hero-1,cats-1,card-1,rail1-1,rail2-1,rail3-1,footer-1` — Retail classic (Courts style)
@@ -47,7 +50,7 @@ Shareable preview links (also saves the choice):
 - Cart contents stay in sync across tabs; checkout recovers if an emptied cart is filled again.
 
 ## Verification
-Run `node /home/vjranga/Documents/chamara/demo/tests/runtime.test.cjs` for the 15 regression checks. Browser evidence and remaining client inputs are recorded in `../CLIENT-REVIEW.md` (relative to this folder).
+Run `node /home/vjranga/Documents/chamara/demo/tests/runtime.test.cjs` for the 26 regression checks (includes client Easy Payment example and options lock). Browser evidence and remaining client inputs are recorded in `../CLIENT-REVIEW.md` (relative to this folder).
 
 ## Payment flow (sandbox mock — no real payment)
 Checkout → PayHere / bank-card instalments / Koko / Mintpay → provider-branded page (`pay.html`) → order received → shows in My account.
@@ -56,11 +59,11 @@ Preview helpers: `cart.html?sample=1`, `checkout.html?sample=1`, `order-received
 
 ## WooCommerce mapping notes
 - Loops use `ul.products > li.product`, prices use `woocommerce-Price-amount`, checkout uses `#payment ul.wc_payment_methods` with gateway ids `payhere`, `payhere_instalment`, `koko`, `mintpay`, `easy_payment`, `cod`, `bacs` (confirm real plugin ids before build).
-- Easy Payment = custom plugin: product-page calculator + `easy_payment` gateway with custom order status "Pending approval" + admin Applications/Plans/Settings screens.
+- Easy Payment = custom plugin (formula in `KV.calc`, `theme.js`): product-page calculator + `easy_payment` gateway with custom order status "Pending approval" + admin Applications/Plans/Settings screens.
 - Design tokens are CSS custom properties in `assets/css/theme.css` → map to Customizer settings.
 
 ## WAITING ON CLIENT
-- Easy Payment formula (tenures, markup, min down payment, late fee) — current values are placeholders
+- Easy Payment: client formula in place (6 Nov 2026: 20-50 % down, 3.5 % document charge, 4 % x months flat interest, 6 or 12 months). Still open: minimum item price (Rs 15,000 placeholder), late fee, eligibility
 - Real products, prices, photos; showroom list/addresses/hours; hotline, WhatsApp, email, head office
 - Bank account details for bank transfer; coupon codes (WELCOME5 / KAVINDU10 are samples)
 - Which gateway merchant accounts exist (PayHere / Koko / Mintpay) and their basket limits
@@ -106,3 +109,7 @@ Version55: Everyday retail is the default approved desktop combination: Classic 
 
 
 Version56: approved mobile Everyday retail defaults are Retail header, standard four-tab bottom bar, retail product cards, two products per row, Classic style, Slider +2 banners, Icon category row, tabbed Best sellers, carousel Deals, two featured New arrivals +grid, and navy footer. Mobile product sections/footer are stored independently as mrail1/mrail2/mrail3/mfooter and included in preview links. The selected Desktop/Mobile tab determines which section/footer settings the controls edit. Style/hero/categories remain shared. Breakpoint changes rerender rails/footer with their device-specific selection. Approved desktop defaults are preserved.
+
+## Current desktop defaults
+Desktop defaults corrected 13 Nov 2026 (VJ): Classic, Retail header, **Category icons menu (menu-2)**, **Full-width banner + service tiles hero (hero-2)**, **Circle image categories (cats-3)**, Image first card, Best sellers tabs, Deals 2 featured + grid, New arrivals tabs, USP + light footer. Everyday retail preset = same. Mobile defaults unchanged. Theme options selector is back (OPT_LOCKED = false).
+- 13 Nov 2026 (later): defaults approved by VJ for desktop and mobile; Theme options button hidden again (OPT_LOCKED on). Local, not pushed.

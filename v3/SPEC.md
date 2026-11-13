@@ -3,8 +3,8 @@
 **Current implementation rules (22 October 2026):** `README.md` and `../CLIENT-REVIEW.md` record the verified client-presentation revision. Keep all design options. Hero/banner slots are image-only; current desktop hero height is 560px in all layouts. Standard cards are bordered, fully clickable, with favourite/Add to cart and no stock or finance lines. The older component descriptions below are historical where they conflict. No real payment, authentication, document submission or email service is connected.
 
 Client: **Kavindu Enterprises** (Sri Lanka). Store: **Kavindu Online Store**. Sells home & office furniture, home appliances
-(fridges, washing machines, AC, kitchen), TVs/audio, laptops/phones. Has showrooms. Key feature: **Easy Payment** — in-house
-monthly instalments (cash price lowest; monthly plan costs more; formula from client still pending → placeholder table in data.js).
+(fridges, washing machines, AC, kitchen), TVs/audio (not laptops/phones, removed 5 Nov 2026). Has showrooms. Key feature: **Easy Payment** — in-house
+monthly instalments (cash price lowest; monthly plan costs more; client formula received 6 Nov 2026 — see PROJECT-DETAILS.md section 2).
 Gateways: PayHere (cards, wallets, bank card instalments), Koko (pay in 3), Mintpay (pay in 3), Cash on Delivery, Bank transfer, Easy Payment (in-house, needs approval). PayPal NOT offered.
 Will be built on **WordPress + WooCommerce** → HTML must use WooCommerce default markup/classes (see /home/vjranga/Documents/chamara/research/woocommerce-patterns.md section 2 — copy those structures).
 

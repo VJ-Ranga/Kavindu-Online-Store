@@ -160,7 +160,8 @@
   KV.wishlist = listStore('kv-wishlist'); KV.compare = listStore('kv-compare', 3);
 
   /* ---------- options ---------- */
-  var OPT_DEF = { skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', mcols: '2', hero: '1', cats: '2', card: '2', rail1: '1', rail2: '3', rail3: '1', footer: '2', mrail1: '1', mrail2: '2', mrail3: '3', mfooter: '1', mskin: '1', mhero: '1', mcats: '2' };
+  var OPT_DEF = { skin: '1', header: '1', menu: '2', mheader: '1', bottom: '1', mcard: '1', mcols: '2', hero: '2', cats: '3', card: '2', rail1: '1', rail2: '3', rail3: '1', footer: '2', mrail1: '1', mrail2: '2', mrail3: '3', mfooter: '1', mskin: '1', mhero: '1', mcats: '2' };
+  var OPT_LOCKED = !w.KV_OPTIONS_UNLOCKED; /* client approved defaults; set false (or window.KV_OPTIONS_UNLOCKED = true before theme.js) to bring back the Theme options selector */
   var RAIL_KEYS = ['rail1', 'rail2', 'rail3'];
   var MOBILE_KEYS = ['mheader', 'bottom', 'mcard', 'mcols', 'mskin', 'mhero', 'mcats', 'mrail1', 'mrail2', 'mrail3', 'mfooter'];
   function profileKeys(device) { return Object.keys(OPT_DEF).filter(function (key) { return !device || (MOBILE_KEYS.indexOf(key) > -1) === (device === 'mobile'); }); }
@@ -181,7 +182,7 @@
     { key: 'rail3', group: 'Homepage product sections', title: 'New arrivals - furniture', home: true, items: ['Tabs + grid', 'Carousel with arrows', 'Two featured picks + grid'] },
     { key: 'footer', title: 'Footer', home: false, items: ['Navy 4 columns', 'USP strip + light columns', 'Compact centred'] }
   ];
-  var optState = (function () { var s = load('kv-options', {}), o = {}; if (String(s.menu) === '3') s.menu = '2';
+  var optState = (function () { if (OPT_LOCKED) return JSON.parse(JSON.stringify(OPT_DEF)); var s = load('kv-options', {}), o = {}; if (String(s.menu) === '3') s.menu = '2';
     for (var k in OPT_DEF) o[k] = optOk(k, s[k]) ? String(s[k]) : OPT_DEF[k];
     if (optOk('rail', s.rail) && !RAIL_KEYS.some(function (r) { return optOk(r, s[r]); })) RAIL_KEYS.forEach(function (r) { o[r] = String(s.rail); }); /* legacy single "rail" key */
     /* Shareable preview links: ?opt=skin-2,header-2,rail1-3 ("rail-N" sets all three sections) */
@@ -189,9 +190,9 @@
     return o; })();
   function mobileCard() { return w.matchMedia('(max-width: 991.98px)').matches ? optState.mcard : optState.card; }
   function deviceOption(k) { return w.matchMedia('(max-width: 991.98px)').matches && ('m' + k) in optState ? optState['m' + k] : optState[k]; }
-  function applyOpts() { for (var k in optState) d.body.setAttribute('data-' + k, optState[k]); RAIL_KEYS.concat(['skin', 'hero', 'cats', 'footer']).forEach(function (key) { d.body.setAttribute('data-' + key, deviceOption(key)); }); d.body.setAttribute('data-card', mobileCard()); if (w.history && new URLSearchParams(w.location.search).has('opt')) { try { w.history.replaceState(null, '', KV.options.url()); } catch (e) {} } }
+  function applyOpts() { for (var k in optState) d.body.setAttribute('data-' + k, optState[k]); RAIL_KEYS.concat(['skin', 'hero', 'cats', 'footer']).forEach(function (key) { d.body.setAttribute('data-' + key, deviceOption(key)); }); d.body.setAttribute('data-card', mobileCard()); if (!OPT_LOCKED && w.history && new URLSearchParams(w.location.search).has('opt')) { try { w.history.replaceState(null, '', KV.options.url()); } catch (e) {} } }
   var PRESETS = [
-    { id: 'classic', title: 'Everyday retail', desc: 'Familiar shopping, offers up front', skin: '1', header: '1', menu: '1', mheader: '1', bottom: '1', mcard: '1', mcols: '2', hero: '1', cats: '2', card: '2', rail1: '1', rail2: '3', rail3: '1', footer: '2', mrail1: '1', mrail2: '2', mrail3: '3', mfooter: '1', mskin: '1', mhero: '1', mcats: '2' },
+    { id: 'classic', title: 'Everyday retail', desc: 'Familiar shopping, offers up front', skin: '1', header: '1', menu: '2', mheader: '1', bottom: '1', mcard: '1', mcols: '2', hero: '2', cats: '3', card: '2', rail1: '1', rail2: '3', rail3: '1', footer: '2', mrail1: '1', mrail2: '2', mrail3: '3', mfooter: '1', mskin: '1', mhero: '1', mcats: '2' },
     { id: 'modern', title: 'Modern showcase', desc: 'Wide imagery and clean product rails', skin: '2', header: '1', menu: '2', mheader: '2', bottom: '2', mcard: '2', mcols: '1', hero: '2', cats: '3', card: '2', rail1: '2', rail2: '1', rail3: '3', footer: '2', mrail1: '2', mrail2: '1', mrail3: '3', mfooter: '2', mskin: '2', mhero: '2', mcats: '3' },
     { id: 'catalogue', title: 'Catalogue first', desc: 'Quick category access and detailed cards', skin: '1', header: '1', menu: '2', mheader: '3', bottom: '3', mcard: '3', mcols: '1', hero: '3', cats: '2', card: '3', rail1: '1', rail2: '2', rail3: '1', footer: '3', mrail1: '1', mrail2: '2', mrail3: '1', mfooter: '3', mskin: '1', mhero: '3', mcats: '2' }
   ];
@@ -199,16 +200,17 @@
     presets: PRESETS,
     value: deviceOption,
     url: function (base) { var u = new URL(base || w.location.href, w.location.href); u.searchParams.set('opt', Object.keys(OPT_DEF).map(function (k) { return k + '-' + optState[k]; }).join(',')); return u.href; },
-    preset: function (id, device) { var p = PRESETS.filter(function (x) { return x.id === id; })[0]; if (!p) return; profileKeys(device).forEach(function (k) { optState[k] = p[k]; }); save('kv-options', optState); applyOpts(); KV.renderHeader(); KV.renderFooter(); emit('options', { key: 'all' }); KV.sync(); syncOptUi(); },
+    preset: function (id, device) { if (OPT_LOCKED) return; var p = PRESETS.filter(function (x) { return x.id === id; })[0]; if (!p) return; profileKeys(device).forEach(function (k) { optState[k] = p[k]; }); save('kv-options', optState); applyOpts(); KV.renderHeader(); KV.renderFooter(); emit('options', { key: 'all' }); KV.sync(); syncOptUi(); },
     get: function () { return JSON.parse(JSON.stringify(optState)); },
     set: function (k, v) {
+      if (OPT_LOCKED) return;
       v = String(v); if (k === 'rail' && optOk('rail1', v)) { RAIL_KEYS.forEach(function (r) { optState[r] = v; }); save('kv-options', optState); applyOpts(); emit('options', { key: 'rail', value: v }); KV.sync(); return; }
       if (!(k in OPT_DEF) || !optOk(k, v)) return;
       optState[k] = v; save('kv-options', optState); applyOpts();
       if (k === 'header' || k === 'menu' || k === 'mheader') KV.renderHeader(); if (k === 'footer' || k === 'mfooter' || k === 'skin' || k === 'mskin') KV.renderFooter();
       emit('options', { key: k === 'mcard' || k === 'mcols' ? 'card' : k.replace(/^m(?=rail|skin|hero|cats|footer)/, ''), value: v }); KV.sync(); syncOptUi();
     },
-    reset: function (device) { profileKeys(device).forEach(function (key) { optState[key] = OPT_DEF[key]; }); save('kv-options', optState); applyOpts(); KV.renderHeader(); KV.renderFooter(); emit('options', { key: 'all', value: null }); KV.sync(); }
+    reset: function (device) { if (OPT_LOCKED) return; profileKeys(device).forEach(function (key) { optState[key] = OPT_DEF[key]; }); save('kv-options', optState); applyOpts(); KV.renderHeader(); KV.renderFooter(); emit('options', { key: 'all', value: null }); KV.sync(); }
   };
 
   /* ---------- ready queue ---------- */
@@ -321,7 +323,7 @@
     var mode = optState.mheader, menu = '<button class="mh-btn" type="button" data-bs-toggle="offcanvas" data-bs-target="#kv-mobile-menu" aria-controls="kv-mobile-menu" aria-label="Open menu"><i class="fa-solid fa-bars" aria-hidden="true"></i></button>';
     var search = '<button class="mh-btn" type="button" data-kv-mobile-search aria-label="Search products"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i></button>';
     var cart = '<a class="mh-btn hdr-cart" href="cart.html" data-kv-open-cart aria-label="Cart"><i class="fa-solid fa-bag-shopping" aria-hidden="true"></i><span class="hdr-count" data-kv-cart-count>0</span></a>';
-    return '<div class="mhead mh-style-' + mode + ' d-lg-none"><div class="mhead-row">' + menu + logo(false, 32) + '<div class="mh-right">' + (mode === '3' ? '' : search) + cart + '</div></div>' + (mode === '2' ? '' : '<div class="mhead-search">' + searchForm('m' + id, false) + '</div>') + '</div>';
+    return '<div class="mhead mh-style-' + mode + ' d-lg-none"><div class="mhead-row">' + menu + logo(false, 32) + '<div class="mh-right">' + (mode === '2' ? search : '') + cart + '</div></div>' + (mode === '2' ? '' : '<div class="mhead-search">' + searchForm('m' + id, false) + '</div>') + '</div>';
   }
   var NAV1 = ['furniture', 'refrigerators', 'washing-machines', 'tv-audio', 'air-conditioners', 'kitchen-appliances'];
   function navLinks(ids) {
@@ -338,7 +340,7 @@
     }).join('');
     return '<header class="kv-header hdr-1"><div class="hdr-top d-none d-lg-block"><div class="container hdr-top-row"><ul><li><a href="tel:' + BR.hotlineTel + '"><i class="fa-solid fa-phone" aria-hidden="true"></i> Hotline ' + esc(BR.hotline) + '</a></li><li>Free delivery in Colombo over Rs 50,000</li></ul><ul><li><a href="stores.html"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Store locator</a></li><li><a href="my-account.html?tab=orders">Track order</a></li><li><a href="contact.html">Help</a></li></ul></div></div>' +
       '<div class="hdr-main d-none d-lg-block"><div class="container hdr-main-row">' + logo(false, 48) + searchForm('d1', true) + icons({ easy: true, total: true }) + '</div></div>' +
-      '<div class="hdr-nav d-none d-lg-block"><div class="container hdr-nav-row"><div class="allcats"><button type="button" class="allcats-btn" data-kv-categories aria-expanded="false" aria-controls="allcats-menu"><i class="fa-solid fa-bars" aria-hidden="true"></i> All categories <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></button><ul class="allcats-menu" id="allcats-menu">' + allc + '</ul></div><nav aria-label="Main"><ul class="nav-list">' + navLinks(NAV1.slice(0, 5)) + '</ul></nav></div></div>' + mobileHead(1) + '</header>';
+      '<div class="hdr-nav d-none d-lg-block"><div class="container hdr-nav-row"><div class="allcats"><a class="allcats-btn" href="shop.html"><i class="fa-solid fa-bars" aria-hidden="true"></i> All categories <i class="fa-solid fa-chevron-down" aria-hidden="true"></i></a><ul class="allcats-menu" id="allcats-menu">' + allc + '</ul></div><nav aria-label="Main"><ul class="nav-list">' + navLinks(NAV1.slice(0, 5)) + '</ul></nav></div></div>' + mobileHead(1) + '</header>';
   }
   KV.renderHeader = function () {
     var host = $('#site-header'); if (!host) return;
@@ -420,12 +422,14 @@
     var desktopGroups = OPT_META.filter(function (g) { return MOBILE_KEYS.indexOf(g.key) < 0; });
     var deviceTabs = '<div class="opt-device-tabs" role="tablist" aria-label="Device options"><button type="button" role="tab" id="opt-tab-desktop" aria-controls="opt-panel-desktop" data-kv-device="desktop"><i class="fa-solid fa-desktop" aria-hidden="true"></i> Desktop</button><button type="button" role="tab" id="opt-tab-mobile" aria-controls="opt-panel-mobile" data-kv-device="mobile"><i class="fa-solid fa-mobile-screen-button" aria-hidden="true"></i> Mobile</button></div>';
     var opts = deviceTabs + '<p class="opt-device-note">Each tab saves its own design. Changing one device does not change the other.</p><div role="tabpanel" id="opt-panel-desktop" aria-labelledby="opt-tab-desktop">' + optionFields(desktopGroups) + '</div><div role="tabpanel" id="opt-panel-mobile" aria-labelledby="opt-tab-mobile">' + optionFields(mobileGroups) + '</div>';
+    var optionsUi = '';
+    if (!OPT_LOCKED) optionsUi = '<button type="button" class="kv-opt-fab" aria-label="Theme options" data-bs-toggle="offcanvas" data-bs-target="#kv-options" aria-controls="kv-options"><i class="fa-solid fa-gear" aria-hidden="true"></i><span>Theme options</span></button>' +
+      '<div class="offcanvas offcanvas-start kv-drawer" id="kv-options" tabindex="-1" aria-labelledby="kv-opt-title" data-bs-scroll="true" data-bs-backdrop="false" data-bs-keyboard="true"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-opt-title">Theme options</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close theme options"></button></div><div class="offcanvas-body"><p class="opt-note">Explore the client presentation. Every choice updates the store and stays saved in this browser.</p>' + opts + presets + '<div class="opt-share"><label for="kv-preview-url">Your selected design</label><div><input id="kv-preview-url" type="url" readonly aria-label="Preview link"><button type="button" class="button" data-kv-copy>Copy link</button></div><p id="kv-copy-status" role="status"></p><a href="index.html" data-kv-preview-home>Preview these choices on the homepage</a></div><button type="button" class="button btn-kv-outline" data-kv-opt-reset>Reset to defaults</button></div></div>';
     wrap.innerHTML = '<a class="kv-skip" href="#primary">Skip to content</a>' +
       '<div class="kv-notices" aria-live="polite"></div>' +
       '<div class="offcanvas offcanvas-end kv-drawer" id="kv-cart-drawer" tabindex="-1" aria-labelledby="kv-cart-title"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-cart-title">Your cart <span id="kv-cart-count"></span></h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close cart"></button></div><div class="offcanvas-body" id="kv-cart-body"></div></div>' +
       '<div class="offcanvas offcanvas-start kv-drawer" id="kv-mobile-menu" tabindex="-1" aria-labelledby="kv-mm-title"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-mm-title">Menu</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close menu"></button></div><div class="offcanvas-body p-0"><div class="mm-links"><a href="easy-payment.html"><i class="fa-solid fa-calendar-check" aria-hidden="true"></i> Easy Payment</a><a class="nav-deals" href="shop.html?sort=deals"><i class="fa-solid fa-tags" aria-hidden="true"></i> Deals</a></div><h3 class="mm-title">Shop by category</h3>' + acc + '<div class="mm-links"><a href="stores.html">Store locator</a><a href="my-account.html?tab=orders">Track order</a><a href="my-account.html">My account</a><a href="contact.html">Contact us</a><a href="tel:' + BR.hotlineTel + '"><i class="fa-solid fa-phone" aria-hidden="true"></i> ' + esc(BR.hotline) + '</a></div></div></div>' +
-      '<button type="button" class="kv-opt-fab" aria-label="Theme options" data-bs-toggle="offcanvas" data-bs-target="#kv-options" aria-controls="kv-options"><i class="fa-solid fa-gear" aria-hidden="true"></i><span>Theme options</span></button>' +
-      '<div class="offcanvas offcanvas-start kv-drawer" id="kv-options" tabindex="-1" aria-labelledby="kv-opt-title" data-bs-scroll="true" data-bs-backdrop="false" data-bs-keyboard="true"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-opt-title">Theme options</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close theme options"></button></div><div class="offcanvas-body"><p class="opt-note">Explore the client presentation. Every choice updates the store and stays saved in this browser.</p>' + opts + presets + '<div class="opt-share"><label for="kv-preview-url">Your selected design</label><div><input id="kv-preview-url" type="url" readonly aria-label="Preview link"><button type="button" class="button" data-kv-copy>Copy link</button></div><p id="kv-copy-status" role="status"></p><a href="index.html" data-kv-preview-home>Preview these choices on the homepage</a></div><button type="button" class="button btn-kv-outline" data-kv-opt-reset>Reset to defaults</button></div></div>' +
+      optionsUi +
       '<a class="kv-wa" href="https://wa.me/' + BR.whatsapp + '" aria-label="Chat on WhatsApp" target="_blank" rel="noopener"><i class="fa-brands fa-whatsapp" aria-hidden="true"></i></a>' +
       '<div class="kv-compare-bar" hidden><div class="container cmp-row"><ul class="cmp-thumbs"></ul><div class="cmp-actions"><button type="button" class="button alt" data-kv-compare-open>Compare (<span class="cmp-n">0</span>)</button><button type="button" class="link-btn" data-kv-compare-clear>Clear</button></div></div></div>' +
       '<div class="offcanvas offcanvas-end kv-drawer kv-drawer-wide" id="kv-compare-drawer" tabindex="-1" aria-labelledby="kv-cmp-title"><div class="offcanvas-header"><h2 class="offcanvas-title" id="kv-cmp-title">Compare products</h2><button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button></div><div class="offcanvas-body" id="kv-compare-body"></div></div>' +
@@ -435,13 +439,13 @@
     var isDeals = page === 'shop.html' && new URLSearchParams(location.search).get('sort') === 'deals';
     var cur = function (n) { return page === n && !(n === 'shop.html' && isDeals) ? ' aria-current="page" class="active"' : ''; };
     var bar = d.createElement('nav'); bar.className = 'kv-bottombar d-lg-none'; bar.setAttribute('aria-label', 'Quick navigation');
-    bar.innerHTML = '<a href="shop.html"' + cur('shop.html') + '><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i><span>Shop</span></a><button type="button" data-kv-mobile-search aria-label="Search products"><i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i><span>Search</span></button><a href="shop.html?sort=deals"' + (isDeals ? ' aria-current="page" class="active"' : '') + '><i class="fa-solid fa-tags" aria-hidden="true"></i><span>Deals</span></a><a href="my-account.html"' + cur('my-account.html') + '><i class="fa-regular fa-user" aria-hidden="true"></i><span>Account</span></a>';
+    bar.innerHTML = '<a href="index.html"' + cur('index.html') + '><i class="fa-solid fa-house" aria-hidden="true"></i><span>Home</span></a><a href="shop.html"' + cur('shop.html') + '><i class="fa-solid fa-table-cells-large" aria-hidden="true"></i><span>Shop</span></a><a href="shop.html?sort=deals"' + (isDeals ? ' aria-current="page" class="active"' : '') + '><i class="fa-solid fa-tags" aria-hidden="true"></i><span>Deals</span></a><a href="my-account.html"' + cur('my-account.html') + '><i class="fa-regular fa-user" aria-hidden="true"></i><span>Account</span></a>';
     b.appendChild(bar);
     var searchModal = d.createElement('div'); searchModal.className = 'modal fade kv-search-modal'; searchModal.id = 'kv-search-modal'; searchModal.tabIndex = -1; searchModal.setAttribute('aria-labelledby', 'kv-search-title'); searchModal.setAttribute('aria-hidden', 'true');
     searchModal.innerHTML = '<div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h2 id="kv-search-title">Find your next upgrade</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close search"></button></div><div class="modal-body">' + searchForm('mobile-modal', false) + '<p class="search-hint">Search by product, brand or model number.</p><div class="search-quick"><a href="shop.html?cat=furniture">Furniture</a><a href="shop.html?cat=refrigerators">Refrigerators</a><a href="shop.html?sort=deals">Current deals</a></div></div></div></div>';
     b.appendChild(searchModal); searchModal.addEventListener('shown.bs.modal', function () { $('input', searchModal).focus(); });
     searchModal.addEventListener('hidden.bs.modal', function () { $$('.kv-suggest', searchModal).forEach(function (e) { e.hidden = true; }); if (searchTrigger && d.contains(searchTrigger)) searchTrigger.focus(); });
-    $('#kv-options').addEventListener('show.bs.offcanvas', syncOptUi);
+    if (!OPT_LOCKED) $('#kv-options').addEventListener('show.bs.offcanvas', syncOptUi);
     d.addEventListener('pointerdown', function (e) {
       var panel = $('#kv-options'), fab = $('.kv-opt-fab');
       if (panel && panel.classList.contains('show') && !panel.contains(e.target) && !(fab && fab.contains(e.target)) && w.bootstrap) {

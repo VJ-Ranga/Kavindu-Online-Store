@@ -3,11 +3,11 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
-function runtime(initial={},mobile=true,route='index.html') {
+function runtime(initial={},mobile=true,route='index.html',unlocked=true) {
   const store = new Map(Object.entries(initial));
   const attrs={};
   const document={readyState:'loading',body:{classList:{contains:()=>false},getAttribute:k=>attrs[k],setAttribute:(k,v)=>attrs[k]=v},addEventListener(){},querySelector(){return null;},querySelectorAll(){return [];}};
-  const window={document,location:{search:'',pathname:'/v3/'+route,href:'https://example.test/v3/'+route},dispatchEvent(){},addEventListener(){},matchMedia:()=>({matches:mobile})};
+  const window={KV_OPTIONS_UNLOCKED:unlocked,document,location:{search:'',pathname:'/v3/'+route,href:'https://example.test/v3/'+route},dispatchEvent(){},addEventListener(){},matchMedia:()=>({matches:mobile})};
   const ctx={window,document,location:window.location,localStorage:{getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)},URL,URLSearchParams,CustomEvent:class{},setInterval(){},clearInterval(){},setTimeout(){},console};
   vm.createContext(ctx);
   for(const file of ['data.js','theme.js']) vm.runInContext(fs.readFileSync(path.join(__dirname,'../v3/assets/js',file),'utf8'),ctx);
@@ -48,10 +48,10 @@ test('ready-made combinations retain individual controls',()=>{
  const kv=runtime().KV;assert.equal(kv.options.presets.length,3);kv.options.preset('modern');assert.equal(kv.options.get().skin,'2');kv.options.set('hero','3');assert.equal(kv.options.get().hero,'3');
 });
 test('navigation variants can be shared, restored, and reset independently',()=>{
- const kv=runtime().KV;kv.options.set('menu','2');kv.options.set('header','3');
- assert.equal(kv.options.get().menu,'2');assert.match(kv.options.url(),/menu-2/);
+ const kv=runtime().KV;kv.options.set('menu','1');kv.options.set('header','3');
+ assert.equal(kv.options.get().menu,'1');assert.match(kv.options.url(),/menu-1/);
  const restored=runtime({'kv-options':JSON.stringify(kv.options.get())}).KV;
- assert.equal(restored.options.get().menu,'2');restored.options.reset();assert.equal(restored.options.get().menu,'1');
+ assert.equal(restored.options.get().menu,'1');restored.options.reset();assert.equal(restored.options.get().menu,'2');
  for(const preset of kv.options.presets) {kv.options.preset(preset.id);assert.ok(['1','2'].includes(kv.options.get().menu));}
 });
 test('mobile presentation choices persist independently and are included in preview links',()=>{
@@ -128,7 +128,7 @@ test('removed compact icon menu restores as the remaining category icon menu',()
 });
 
 test('fresh defaults, Everyday retail and reset use the approved desktop selection',()=>{
- const expected={skin:'1',header:'1',menu:'1',card:'2',hero:'1',cats:'2',rail1:'1',rail2:'3',rail3:'1',footer:'2'};
+ const expected={skin:'1',header:'1',menu:'2',card:'2',hero:'2',cats:'3',rail1:'1',rail2:'3',rail3:'1',footer:'2'};
  const kv=runtime({},false).KV;
  function check(){const options=kv.options.get();for(const [key,value] of Object.entries(expected))assert.equal(options[key],value,key);}
  check();kv.options.preset('modern');kv.options.preset('classic');check();
@@ -162,4 +162,11 @@ test('all appearance choices, presets and resets are isolated by device',()=>{
  w.matchMedia=()=>({matches:false});assert.equal(kv.options.value('rail2'),'3');assert.equal(kv.options.value('footer'),'2');
  w.matchMedia=()=>({matches:true});assert.equal(kv.options.value('rail2'),'2');assert.equal(kv.options.value('footer'),'1');
  const restored=runtime({'kv-options':JSON.stringify(kv.options.get())}).KV;assert.equal(restored.options.value('rail3'),'3');assert.match(restored.options.url(),/mskin-1/);assert.match(restored.options.url(),/mhero-1/);
+});
+
+
+test('live site is locked to the approved default options',()=>{
+ const w=runtime({'kv-options':JSON.stringify({skin:'2',menu:'1',hero:'1',cats:'1',card:'1'})},false,'index.html',false);
+ const o=w.KV.options.get(); assert.equal(o.skin,'1'); assert.equal(o.menu,'2'); assert.equal(o.hero,'2'); assert.equal(o.cats,'3'); assert.equal(o.card,'2');
+ w.KV.options.set('skin','2'); assert.equal(w.KV.options.get().skin,'1');
 });
